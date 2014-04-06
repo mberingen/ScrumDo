@@ -1,0 +1,14 @@
+{% extends "extras/base.html" %}
+
+{% load group_tags %}
+
+{% block body %}
+  {% block heading %}
+    <h1>Configure {{extra.getName}}</h1>
+  {% endblock %}
+
+
+  {% block configure_content %}
+  {% endblock %}
+  
+{% endblock %}

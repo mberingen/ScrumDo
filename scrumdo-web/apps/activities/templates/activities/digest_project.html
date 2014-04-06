@@ -1,0 +1,33 @@
+{% load activity_tags %}
+{% load projects_tags %}
+{% load story_tags %}
+
+<a style="font-size:165%; font-weight:bold; text-decoration:none" href="{{domain}}{% url project_detail project.slug %}">{{ project.name }}</a><br/>
+<img src="{{project|google_chart_url}}"><br/>
+
+{% for iteration in project.get_current_iterations %}
+  <a style="font-size:115%; font-weight:bold; text-decoration:none" href="{{domain}}{% url iteration project.slug iteration.id %}">{{ iteration.name }}</a><br/>
+  {% if iteration.daysLeft %}
+  <b>{{ iteration.daysLeft }}</b> days left,
+  {% endif %}
+  <b>{{ iteration.total_points }}</b> total points,
+  <b>{{ iteration.completed_points }}</b> points completed<br/>
+  
+  <img src="{{iteration|google_chart_url}}"><br/>
+ 
+{% endfor %}
+
+{% if news_items %}
+  Today's Activity:<br/>
+  <ul>
+  {% for newsitem in news_items %}
+	<li>
+		{% if newsitem.user %}{{newsitem.user}}{% else %}ScrumDo{% endif %} {{newsitem.text|absolute_url|safe}}
+	</li>
+  {% endfor %}
+  </ul>
+{% else %}
+  No Activity.
+{% endif %}
+
+<hr style="color: #ddd; background-color: #ddd; height: 1px;"/>

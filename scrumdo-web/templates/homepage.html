@@ -1,0 +1,39 @@
+{% extends "site_base.html" %}
+
+{% load projects_tags %}
+{% load avatar_tags %}
+{% load projects_tags %}
+{% load i18n %}
+{% load ifsetting_tag %}
+
+
+{% block head_title %}{% trans "Scrumdo - Agile Development Story Management Site" %}{% endblock %}
+
+{% block extra_head %}
+ <link rel="stylesheet" href="{{ STATIC_URL }}css/home.css" />
+{% endblock %}
+
+{% block body %}
+<br/><br/><br/>
+
+<div id="pick_org_graphic">
+  <img src="{{STATIC_URL}}images/mascot/male_mascot_pick_one.png"><br/>
+  Please pick your organization.
+</div>
+<ul class="organization_list">
+{% for organization in my_organizations %}     
+  <li>
+	<div class="organization_picker">
+ 	  <a href="{{organization.get_absolute_url}}"><h1>{{organization.name}}</h1>
+	  {{organization.projects.count}} Project{{organization.projects.count|pluralize}} - 
+ 	  {{organization.teams.count}} Team{{organization.teams.count|pluralize}}
+	  </a>
+	</div>
+  </li>
+{% endfor %}
+  <li style="text-align:center; margin-top:20px"><a title="Add New Organization" href="{% url organization_create %}">Create New Organization</a></li>
+</ul>
+
+
+
+{% endblock %}

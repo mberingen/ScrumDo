@@ -1,0 +1,40 @@
+{% load i18n %}
+{% load comments_tag %}
+{% load projects_tags %}
+{% load uni_form %}
+
+<div id="organization_area" style="width:550px;">
+
+<form id="organization_detail_form" class="uniForm" method="POST" action="{% url organization_edit organization.slug %}">
+   {{ form.non_field_errors }}
+   
+    <h1>Edit Details</h1><br/>
+          <fieldset class="inlineLabels">
+              {{ form|as_uni_form }}
+              <div class="form_block">
+                  <input type="hidden" name="action" value="create" />
+                  <div class="buttonHolder"><button class="primaryAction" type="submit" >Update Organization</button></div>
+              </div>
+          </fieldset>
+  
+</form>
+ 
+  <br/><br/><br/>
+  <a href="#" class="deleteLink deleteOrgLink" id="deleteOrganizationLink">{% silk "delete" %} Delete Organization</a>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+     
+      $(".deleteOrgLink").click( function() {
+        if( confirm("Are you sure you want to delete this organization?") )
+        {
+          $.post("{% url delete_organization organization.slug %}", function(data) {
+            window.location="/";
+          });          
+        }
+      });
+
+</script>
+
+
+

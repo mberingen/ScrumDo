@@ -1,0 +1,58 @@
+{% extends "projects/base.html" %}
+
+{% load i18n %}
+{% load uni_form %}
+{% load avatar_tags %}
+{% load threadedcommentstags %}
+{% load pagination_tags %}
+{% load extra_tagging_tags %}
+{% load projects_tags %}
+{% load group_tags %}
+{% load topics_tags %}
+{% load wiki_tags %}
+
+
+{% block head_title %}{{ project.name }}{% endblock %}
+
+
+{% block body %}
+  <h1>Story Queue</h1>
+  <p>These are the stories available from external sources that you configured through the <a href="{% url project_extras_url project.slug %}">Extras</a> page.  Import them into your
+     project by checking the appropriate stories and clicking the "Import" button.</p>
+  
+  <span style="float:right"><input type="checkbox" id="view_ignored"><label for="view_ignored">View Ignored Stories</label></span>
+  <table id="story_queue_toolbar">
+	<tr>
+		<td>
+			<input type="checkbox" class="select_all_checkbox" story_id="{{story.id}}"> 
+			<span id="selected_count">0 stories selected</span>
+		</td>
+		<td>
+		
+			<button id="import_story_button" class="button blue">Import</button>  
+			<button id="ignore_story_button" class="button">Ignore</button> 
+			</td>
+			<td class="page_options">			 
+				 <button id="prev_button" class="button">&lt;</button> <button id="next_button" class="button">&gt;</button>
+				 <span id="page_numbers"></span>
+			</td>
+		</td>
+	</tr>
+  </table>
+
+  <table id="story_queue_list">
+
+  </table>
+	<script type="text/javascript" charset="utf-8">
+		var STORY_QUEUE_URL = "{% url queued_stories_url_no_page project.slug %}";
+		var IMPORT_STORY_URL = "{% url import_stories_url project.slug %}";
+		var IGNORE_STORY_URL = "{% url ignore_stories_url project.slug %}";
+		var iteration_list_url = "{% url iteration_list project.slug %}";
+	</script>
+
+	<script src="{{ STATIC_URL }}js/story-queue.js" type="text/javascript"></script>  		
+	
+{% endblock %}
+
+
+

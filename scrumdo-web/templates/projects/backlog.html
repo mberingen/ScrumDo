@@ -1,0 +1,194 @@
+{% extends "projects/base.html" %}
+
+{% load i18n %}
+{% load uni_form %}
+{% load avatar_tags %}
+{% load threadedcommentstags %}
+{% load pagination_tags %}
+{% load extra_tagging_tags %}
+{% load projects_tags %}
+{% load iteration_tags %}
+{% load group_tags %}
+{% load topics_tags %}
+{% load wiki_tags %}
+{% load iteration_tags %}
+{% load story_tags %}
+
+{% block head_title %}{{ project.name }}{% endblock %}
+
+{% block breadcrumbs %}
+  {% if project.organization %}
+     <a href="{% url organization_detail project.organization.slug %}">{{ project.organization.name }}</a> /
+  {% else %}
+    {{ project.creator.username }} /
+  {% endif %}  
+  <a href="{% url project_detail project.slug %}">{{ project.name }}</a> /
+  {{ iteration.name }}
+{% endblock %}
+
+
+{% block add_story %}
+    {% if user.is_authenticated %}
+    {% canwrite project %}
+    <script>
+    	$(function() {    
+			$( "#form-tabs" ).tabs();		
+			{% if show_epic %}
+			  $("#form-tabs").tabs('select', 1);
+			{% endif %}
+    	});
+	</script>
+    <div id="form-tabs">
+        <ul>
+    		<li><a href="#tabs-1">Story</a></li>
+    		<li><a href="#tabs-2">Epic</a></li>
+    	</ul>
+      <div id="tabs-1">{% include "stories/add_story_form.html" %}</div>
+      <div id="tabs-2">{% include "stories/add_epic_form.html" %}</div>
+    </div>
+    {% endcanwrite %}
+
+    {% endif %}
+{% endblock %}
+
+
+{% block body %}
+            
+        <div style="clear:both;">&nbsp;</div>
+
+        <img src="{{ STATIC_URL }}images/ajax-loader.gif" id="loadingIcon">
+        
+
+		<h1>Stories</h1>
+		
+        {% with iteration.id as iteration_id %}
+			{% with 1 as backlog_mode %}
+              {% include "stories/filter_form.html" %}
+			{% endwith %}
+        {% endwith %}         
+       
+        <ul id="story_list" style="min-height:20px">
+
+        </ul>
+    
+
+
+		<div id="size-options" style="float:right">
+		<input type="radio" id="small_epics" name="radio" /><label for="small_epics">_</label>
+		<input type="radio" id="med_epics" name="radio" /><label for="med_epics">=</label>
+		<input type="radio" id="big_epics" name="radio" checked="checked"  /><label for="big_epics">≡</label>
+		</div>
+				<h1>Epics</h1>
+		<ul id="epic_list">
+			{% for epic in epics %}
+				{% include "projects/epic.html" %}
+			{% endfor %}
+		</ul>
+    
+
+      <div id="subIterationList" style="display:none">
+        {% for subiteration in project.iterations.all %}
+          {% ifnotequal subiteration iteration %}
+          
+            <div class="subIteration" iteration_id="{{subiteration.id}}">{% iteration_icon subiteration %} {{subiteration.name}}</div>
+          {% endifnotequal %}
+        {% endfor %}
+      </div>
+
+    
+      <div id="iterationDetails" style="display:none; width:600px;">
+        <h2>Iteration Details</h2>
+        <form method="POST" class="uniForm" action="" style="width:600px;">
+          <fieldset class="inlineLabels">
+           {{ iteration_form|as_uni_form }}
+           <div class="form_block">
+               <div class="buttonHolder">
+                  <button class="primaryAction" type="submit" >Save</button>
+               </div
+           </div>
+           </fieldset>
+         </form>
+      </div>
+      
+      
+    <div id="deleteIteration" style="display: none">
+      <form method="POST" id="deleteForm" action="{% url delete_iteration project.slug iteration.id %}">
+    	<strong>Are you sure you want to delete this iteration?</strong>
+    	<input type="submit" style="display: inline; " value="Yes" />
+    	<button><a style="text-decoration: none; color: #000" href="{% url iteration project.slug iteration.id %}">No</a></button>
+    	<br/>
+      </form>
+      <p>Note: Iterations can only be deleted when they contain no stories.</p>
+    </div>
+    
+
+
+    
+    
+{% endblock %}
+
+{% block extra_body %}
+
+<script type="text/javascript">
+var project_slug = "{{ iteration.project.slug }}";
+var current_story_popup = "";
+var last_load_iter_req = null;
+var static_url = "{{ STATIC_URL }}";
+var iteration_id = "{{ iteration.id }}";
+var iteration_list_url = "{% url iteration_list project.slug %}";
+var iteration_stats_url = "{% url iteration_stats project.slug iteration.id %}";
+</script>
+
+<script type="text/javascript" src="{{STATIC_URL}}js/jquery.cookie.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}js/jquery.collapse.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}js/iteration.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}js/backlog.js"></script>
+
+<script type="text/javascript">
+
+
+function updateStoryList()
+{
+    loadIteration(iteration_id, 1, "backlog_mode=true");
+    updatePanel();
+}
+
+function setupSortableLists()
+{
+	$("#epic_list").sortable("destroy");
+	$("#epic_list").sortable({
+		tolerance: 'pointer',
+        distance: 5,
+		handle: ".epic_gripper",
+		placeholder: "ui-state-highlight",
+		stop: updateEpicPosition,
+	});
+	
+	$(".epic_story_list_item, #story_list, #epic_assigned_stories li").sortable("destroy");
+	$(".epic_story_list_item, #story_list, #epic_assigned_stories li").sortable({
+        stop: updateBacklogStoryPosition,
+        tolerance: 'intersect',
+        distance: 5,
+		dropOnEmpty: true,
+        opacity: 0.5,
+		greedy: true,
+        placeholder: "ui-state-highlight",
+        cancel: ".block_story_body",
+		connectWith: ".epic_story_list_item, #story_list, .epic_block"
+    });
+}
+
+
+$(document).ready(function(){
+	loadIteration(iteration_id, 1, "backlog_mode=true");
+	$("body").bind("storyListChanged",setupSortableLists);
+	$("body").bind("storyListChanged",updateStoryList);
+	
+});
+
+
+{% if GOOGLE_ANALYTICS %}
+  _gaq.push(['_trackEvent', "ViewPage", "Backlog", "", 1]);
+{% endif %}
+</script>  
+{% endblock %}

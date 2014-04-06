@@ -1,0 +1,109 @@
+{% extends "projects/base.html" %}
+{% load i18n %}
+{% load uni_form %}
+{% load avatar_tags %}
+{% load threadedcommentstags %}
+{% load pagination_tags %}
+{% load extra_tagging_tags %}
+{% load projects_tags %}
+{% load group_tags %}
+{% load topics_tags %}
+{% load wiki_tags %}
+{% load iteration_tags %}
+
+{% block head_title %}{{ project.name }}{% endblock %}
+
+{% block breadcrumbs %}
+  {% if project.organization %}
+     <a href="{% url organization_detail project.organization.slug %}">{{ project.organization.name }}</a> /
+  {% else %}
+     {{ project.creator.username }} /
+  {% endif %}
+  <a href="{% url project_detail project.slug %}">{{ project.name }}</a> /
+  Epics
+{% endblock %}
+
+
+{% block body %}
+<img id="loadingIcon" src="{{ STATIC_URL }}images/ajax-loader.gif">
+<h1>Epics</h1>
+{% if archived %}
+ Show Archived | <a href="?show_archived=false">Hide Archived</a>
+{% else %}
+ <a href="?show_archived=true">Show Archived</a> | Hide Archived
+{% endif %}
+
+
+<div id="size-options" style="float:right">
+<input type="radio" id="small_epics" name="radio" /><label for="small_epics">_</label>
+<input type="radio" id="med_epics" name="radio" /><label for="med_epics">=</label>
+<input type="radio" id="big_epics" name="radio" checked="checked"  /><label for="big_epics">≡</label>
+</div>
+<br/><br/>
+  {% if first_time %}
+   <div class="empty_state_box">
+     <h1>Welcome to the Epics tool</h1>
+     <p>This tool will let you create story <b>Epics</b>.</p>  
+	 <p>Epics are a way to do long term planning.  They represent
+	    a large, vaguely defined amount of work.</p>  
+	  <p>Later, when it's time to work on what the epics represent, you
+	    can create stories within the epics to narrow and define the work.</p>
+	Add your first epic now:   
+	{% canwrite project %}
+	    <a class="add_epic_link button green small"  epic_id="{{epic.id}}" href="#">Add Epic</a>
+	 {% endcanwrite %}
+	
+   </div>
+  {% endif %}
+
+  {% for epic in epic_list %}
+     {% ifequal epic "in" %}         
+         <ul class="epic_list">  
+     {% else %}                    
+        {% ifequal epic "out" %}            
+           </ul>       
+           </li>                 
+         {% else %}                    
+           <li class="epic_list_item" epic_id="{{epic.id}}">                          
+              {% include "projects/epic.html" %}
+              {% if epic.leaf %}                 
+                 </li>                     
+              {% endif %}           
+         {% endifequal %}           
+     {% endifequal %}                   
+  {% endfor %}
+
+
+  {% canwrite project %}
+    <a class="add_epic_link button green small"  epic_id="{{epic.id}}" href="#">Add Epic</a>
+  {% endcanwrite %}
+  
+
+
+  <div id="add_story_popup">{% include "stories/add_story_form.html" %}</div>
+  <div id="add_epic_popup">{% include "stories/add_epic_form.html" %}</div>
+  
+  <div id="subIterationList" style="display:none">
+    {% for subiteration in project.iterations.all %}
+      {% ifnotequal subiteration iteration %}
+      
+        <div class="subIteration" iteration_id="{{subiteration.id}}">{% iteration_icon subiteration %} {{subiteration.name}}</div>
+      {% endifnotequal %}
+    {% endfor %}
+  </div>
+
+<script type="text/javascript" src="{{STATIC_URL}}js/epics.js"></script>
+<script type="text/javascript" charset="utf-8">
+
+  {# Inject some page values into javascript variables so we know them at runtime and can use them in our .js files #}  
+  var project_slug = "{{ project.slug }}";
+  var default_iteration = "{{ project.get_default_iteration.id }}";
+  var current_story_popup = "";
+  var last_load_iter_req = null;
+  var static_url = "{{ STATIC_URL }}";
+  {% if GOOGLE_ANALYTICS %}     
+     _gaq.push(['_trackEvent',"ViewPage", "Epics", "", 1]); 
+  {% endif %}
+</script>
+
+{% endblock %}

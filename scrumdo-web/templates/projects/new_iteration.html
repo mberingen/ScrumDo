@@ -1,0 +1,35 @@
+{% extends "projects/base.html" %}
+{% load i18n %}
+{% load uni_form %}
+{% load iteration_tags %}
+
+
+{% block body %}
+
+<h1>New Iteration</h1>
+<form class="uniForm" id="edit-project" method="POST" action="">
+    <fieldset class="inlineLabels">
+        {{ form|as_uni_form }}
+        <div class="form_block">
+            <div class="buttonHolder">
+               <button class="primaryAction" type="submit" >Add Iteration</button>
+            </div
+        </div>
+    </fieldset>
+</form>
+
+
+<script type="text/javascript" charset="utf-8">
+  $(document).ready( function(){
+    $("#id_start_date").datepicker({dateFormat: 'yy-mm-dd' });
+    $("#id_end_date").datepicker({dateFormat: 'yy-mm-dd' });
+  });
+  
+ 
+  {% if GOOGLE_ANALYTICS %}     
+     _gaq.push(['_trackEvent',"ViewPage", "IterationCreation", "", 1]); 
+  {% endif %}      
+
+  
+</script>
+{% endblock %}

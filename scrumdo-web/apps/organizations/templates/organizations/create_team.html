@@ -1,0 +1,46 @@
+{% extends "organizations/commercial_org_base.html" %}
+
+{% load i18n %}
+{% load humanize %}
+{% load projects_tags %}
+{% load extra_tagging_tags %}
+{% load uni_form %}
+{% load avatar_tags %}
+{% load pagination_tags %}
+{% load extras_tags %}
+{% load organizations_tags %}
+{% load favorites_tags %}
+
+{% block head_title %}{{organization.name}}{% endblock %}
+
+
+
+{% block org_body %}
+
+
+
+
+
+
+	{% include "organizations/organization_menu.html" %}
+
+	<div id="organization-menu">
+		<a href="{% url organization_dashboard organization.slug %}"><img class="rollover" src="{{STATIC_URL}}images/organization/dashboard_button.png"></a><a href="{% url organization_projects organization.slug %}"><img class="rollover"  src="{{STATIC_URL}}images/organization/projects_button.png"></a>{% isorgstaff organization %}<a href="{% url team_summary organization.slug %}"><img class="rollover" src="{{STATIC_URL}}images/organization/teams_button.png"></a><a href="{% url subscription_options organization.slug %}"><img class="rollover" src="{{STATIC_URL}}images/organization/subscription_button.png"></a>{% endisorgstaff %}<a href="{% url organization_files organization.slug %}"><img class="rollover" src="{{STATIC_URL}}images/organization/files_button.png"></a><a href="{% url export_organization organization.slug %}"><img class="rollover" src="{{STATIC_URL}}images/organization/export_button.png"></a>
+	</div>
+
+
+    <h1>{% trans "Create Team" %}</h1>
+    
+    <p>{% trans "A <b>team</b> is a group people that have access to projects." %}</p>
+
+    <form class="uniForm" id="team_form" method="POST" action="">          
+        <fieldset class="inlineLabels">
+            {{ form|as_uni_form }}
+            <div class="form_block">
+                <input type="hidden" name="action" value="create" />
+                <div class="buttonHolder"><button class="primaryAction" type="submit" >Create Team</button></div>
+            </div>
+        </fieldset>
+    </form>
+    
+{% endblock %}

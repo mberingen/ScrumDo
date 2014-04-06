@@ -1,0 +1,213 @@
+/* @override http://localhost:8000/site_media/static/css/home.css */
+
+#queue {
+    width: 100%;
+
+}
+
+.box {
+    width: 210px;
+}
+
+
+.box-content .projectfeed {
+    text-align: right;
+    padding-top: 8px;
+    padding-right: 4px;
+}
+
+.box-content .project {
+    padding: 2px;
+    border-bottom: 1px solid #e1e1e1;
+    margin-top: -24px;
+    padding-right: 20px;
+    padding-left: 22px;
+    text-indent: -20px;
+}
+
+
+
+.box-content .project .subtitle {
+    margin-left: 15px;
+}
+
+#projects-box p {
+    margin: 0px;
+    color: #b0b0b0;
+}
+
+#projects-box ul {
+    margin: 5px;
+    padding: 0px;
+}
+
+#queue-box {
+	margin-top: 7px;
+}
+#queue-box .box-top, #projects-box .box-top {
+    border-bottom: 1px solid #e1e1e1;
+}
+
+#queue-box .box-content {
+   border-bottom: 1px solid #e1e1e1;
+   padding: 3px;
+}
+
+#queue-box .box-heading, #projects-box .box-heading {
+    margin-top: 10px;
+    background-color: #fafafa;
+}
+
+#projects-box .box-heading li {
+    display: inline;
+    padding: 10px;
+}
+
+
+#queue-box .box-bottom, #projects-box .box-bottom {
+    margin-top: 10px;
+    border-top: 1px solid #e1e1e1;
+}
+
+#projects-box a:hover, #projects-box a.active {
+    text-decoration: underline;
+}
+
+
+#organizations-box ul {
+    margin: 0px;
+}
+
+#organizations-box p {
+    margin: 0px;
+    padding-left: 10px;
+}
+
+#organizations-box .project {
+    padding-left: 42px;
+}
+
+.greeting {
+    padding: 10px;
+    font-size: 16px;
+    
+}
+
+.newsfeed {
+   width: 100%;
+   margin-top: 7px;
+}
+
+.newsfeed #top {
+    font-size: 20px;
+    font-weight: bold;
+    height: 20px;
+    padding: 5px;
+}
+
+.newsfeed #bottom {
+    background: url("/site_media/static/images/layout/newsfeed-bottom.gif") no-repeat 0px 0px;
+    height: 10px;
+    
+}
+
+.newsfeed a {
+    color: #666;
+}
+
+.newsfeed a:hover {
+    color: #000;
+}
+
+.newsfeed .activity {
+    padding: 0px;    
+    vertical-align: top;
+}
+
+.newsfeed .activity .action {
+    font-weight: bold
+}
+
+
+
+.newsfeed .activity abbr {
+    color: #b0b0b0;
+}
+
+.story_queue_project_title {
+	text-decoration: none;
+	color: #000;
+	font-size: 18px;
+	
+}
+.activity_body {
+	display: inline-block;
+	width: 90%;
+	border-bottom: 1px solid #e1e1e1;
+	vertical-align: top;
+	padding-bottom: 7px;
+	padding-left: 3px;
+	margin-left: 10px;
+	margin-bottom: 8px;
+	margin-right: 0px;
+	padding-right: 0px;
+}
+
+
+
+.organization_list li {
+	margin-bottom: 12px;
+	
+}
+.organization_picker {	
+   text-align: center;
+   border-top: 1px solid #ebebeb;
+   background: #d6d6d6;
+   background: -webkit-gradient(linear, left top, left bottom, from(#f2f2f2), to(#c2c2c2));
+   background: -webkit-linear-gradient(top, #f2f2f2, #c2c2c2);
+   background: -moz-linear-gradient(top, #f2f2f2, #c2c2c2);
+   background: -ms-linear-gradient(top, #f2f2f2, #c2c2c2);
+   background: -o-linear-gradient(top, #f2f2f2, #c2c2c2);
+   
+   -webkit-border-radius: 15px;
+   -moz-border-radius: 15px;
+   border-radius: 15px;
+   -webkit-box-shadow: rgba(0,0,0,0.5) 1px 1px 3px;
+   -moz-box-shadow: rgba(0,0,0,0.5) 1px 1px 3px;
+   box-shadow: rgba(0,0,0,0.5) 1px 1px 3px;
+   text-shadow: rgba(0, 0, 0, 1) 0px 2px 5px;
+   color: #ffffff;
+   
+   font-weight: bold;
+   text-decoration: none;
+   vertical-align: middle;
+}
+.organization_picker h1 {
+    margin: 0px;
+    font-size: 22px;
+}
+.organization_picker a {
+    display: block;
+	color: #ffffff;
+	text-decoration: none;
+	min-height: 60px;
+	padding: 17px 35px;
+}
+
+.organization_picker:hover {
+   border-top-color: #cbe3ff;
+   background: #cbe3ff;
+
+   }
+.organization_picker:active {
+   border-top-color: #1b435e;
+   background: #1b435e;
+   }
+
+.organization_list {
+	width: 350px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: 0px;
+	list-style: none;
+}

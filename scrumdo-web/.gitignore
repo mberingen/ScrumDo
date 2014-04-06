@@ -1,0 +1,9 @@
+.svn
+local_settings.py
+site_media
+*~
+*#*
+runserver.log
+selenium-server.log
+pre-test.json
+current_static_path

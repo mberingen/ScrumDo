@@ -1,0 +1,31 @@
+{% load uni_form %}
+<div style="margin-left:auto; margin-right:auto;">
+	<h1>Add Epic</h1>
+  <div id="epic_form" class="story_form">
+    <form method="POST" id="addEpicForm" class="uniForm" style="width: 100%">
+	
+	
+		<fieldset class="inlineLabels">
+			{{ add_epic_form|as_uni_form }}
+			<div class="form_block">
+		           <div class="buttonHolder">
+		              <button class="primaryAction" type="submit" >Save</button>
+		           </div
+		       </div>
+		</fieldset>
+	
+
+
+
+    </form>
+   </div>
+ </div>
+ 
+<script type="text/javascript" charset="utf-8">  
+	function onEpicAdded( newEpic )
+	{
+      $("body").trigger("epicListChanged"); 
+	}
+	$("#addEpicForm").ajaxForm({ url:"{% url ajax_add_epic project.slug %}",
+                                success:onEpicAdded });
+</script>

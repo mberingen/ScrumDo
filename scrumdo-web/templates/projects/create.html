@@ -1,0 +1,57 @@
+{% extends "projects/base.html" %}
+
+{% load i18n %}
+{% load uni_form %}
+{% load humanize %}
+{% load pagination_tags %}
+{% load order_by %}
+{% load extra_tagging_tags %}
+{% load projects_tags %}
+
+{% block body_div_class %}narrow_body_with_sidebar{% endblock %}
+
+{% block head_title %}{% blocktrans %}Create Project{% endblocktrans %}{% endblock %}
+
+{% block panel %}
+{% endblock %}
+
+{% block body %}
+    <h1>{% trans "Create Project" %}</h1>
+    
+    <p>{% trans "A <b>project</b> is a collection of user stories." %}</p>
+
+        <form class="uniForm" id="project_form" method="POST" action="">
+            <fieldset class="inlineLabels">
+              
+              <div id="div_id_org" class="ctrlHolder">
+      	                <label for="id_org">                    
+      	                    Organization
+      	                </label>
+      	          <select style="width:40%" id="id_org" name="organization">      	            
+      	            {% for org in admin_organizations %}
+      	              <option value="{{org.id}}" {% ifequal organization org %}selected{% endifequal %} >{{org.name}}</option>
+      	            {% endfor %}
+      	            <!-- <option value="none">No Organization</option> -->
+    	            </select>
+
+                  <p id="hint_id_org" class="formHint">Which organization should this project be a part of?<br/><br/>
+                    <a style="text-decoration:none" href="{% url organization_create %}">{% silk "add" %}Create New Organization</a>
+                  </p>
+              </div>
+
+                {{ project_form|as_uni_form }}
+                <div class="form_block">
+                    <input type="hidden" name="action" value="create" />
+                    <div class="buttonHolder"><button class="primaryAction" type="submit" >Create Project</button></div>
+                </div>
+            </fieldset>
+        </form>
+    
+    
+    <script type="text/javascript" charset="utf-8">
+      {% if GOOGLE_ANALYTICS %}     
+         _gaq.push(['_trackEvent',"ViewPage", "Project Creation", "", 1]); 
+      {% endif %}      
+    </script>
+    
+{% endblock %}

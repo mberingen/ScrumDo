@@ -1,0 +1,18 @@
+{% load i18n %}
+
+{# This template gets rendered when we're filling in the columns on the story_list page through javascript #}
+
+{% for story in stories %}
+  {% ifequal display_type "block" %}
+    {% include "stories/single_block_story.html" %}  
+  {% else %}
+    {% include "stories/single_mini_story.html" %}
+  {% endifequal %}
+{% endfor %} 
+
+{% if load_next_page %}
+<script type="text/javascript" charset="utf-8">
+  loadIteration({{iteration_id}}, {{next_page_num}}, "{{next_page_query_string|safe}}");
+  
+</script>
+{% endif %}

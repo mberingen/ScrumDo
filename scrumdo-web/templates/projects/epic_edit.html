@@ -1,0 +1,51 @@
+{% load i18n %}{% load uni_form %}{% load projects_tags %}<div id="epic_area" >
+<h1>Edit Epic #E{{epic.local_id}}</h1>
+<form id="epic_detail_form" method="POST" action="{% url edit_epic epic.id%}" class="uniForm" style="width: 100%">
+	<fieldset class="inlineLabels">
+		{{ form|as_uni_form }}
+		<div class="form_block">
+	           <div class="buttonHolder">
+	              <button class="primaryAction" type="submit" >Save</button>
+	           </div
+	       </div>
+	</fieldset>
+</form>
+<br/><br/>
+  <form method="POST" id="deleteEpicForm" action="{% url delete_epic epic.id%}">
+    <input class="button red" style="margin-top: -25px; margin-right: 5px" type="submit" value="Delete Epic" />
+	<i>Deleting this epic will not delete any stories in it.</i>
+  </form>
+</div>
+<script type="text/javascript" charset="utf-8">
+	var parent_changed = false;
+	
+	$("#epic_detail_form #id_parent").change(function(){parent_changed=true;});
+	
+	$("#epic_detail_form").ajaxForm({        
+      success: function(responseText) {
+		if( responseText == "OK" )
+		{
+			if( parent_changed )
+			{
+				
+				window.location.reload();
+				return;
+			}
+			$("#epic_" + {{epic.id}}).trigger("epicEdited");   
+			closeOverlay();
+		}
+		else
+		{
+			$("#epic_area").replaceWith(responseText);
+		}        
+      }});
+
+
+      $("#deleteEpicForm").ajaxForm({
+        beforeSubmit: function(arr, $form, options) { return confirm("Are you sure you want to delete this epic?"); },
+        success: function(responseText) { 
+          $("body").trigger("epicListChanged"); 
+        }
+      });
+
+</script>

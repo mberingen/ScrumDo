@@ -1,0 +1,7 @@
+{% load projects_tags %}
+{% load avatar_tags %}
+{% load activity_tags %}
+
+{% silk obj.icon %} {% if obj.user %}{% avatar obj.user 32 %}{% endif %}
+{{obj.created|timesince}} ago {% if obj.user %}{{obj.user}}{% else %}ScrumDo{% endif %} {{obj.text|absolute_url|safe}}
+

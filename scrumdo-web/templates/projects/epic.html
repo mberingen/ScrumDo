@@ -1,0 +1,39 @@
+{% load projects_tags %}
+{% load story_tags %}
+{% load markup %}
+<div class="epic_list_block" id="epic_{{epic.id}}" {% if epic.parent %}parent_id="{{epic.parent.id}}"{% endif %} epic_id="{{epic.id}}">	
+
+			{% if epic.points_value %}
+			<div class="epicPointsBox">{{ epic|show_points }}</div>
+			{% endif %} 
+
+	 <span class="epicIcons">
+	    {% canwrite project %}
+	        <a onclick="openOverlay( '/projects/epic/{{ epic.id }}/edit' ); return false;" 
+			   href="/projects/epic/{{ epic.id }}/edit">
+				<img title="Edit Epic" src="{{ STATIC_URL }}pinax/images/silk/icons/pencil.png" />
+			</a>
+	    {% endcanwrite %}
+	 </span>
+	
+	 <span class="epic_text">{% if epic.archived %}(Archived) {% endif %}#E{{epic.local_id}} {{epic.summary}} 
+	   {% canwrite project %}
+	   <div class="add_story_epic_links">
+	     <a class="add_story_link button green small"  epic_id="{{epic.id}}" href="#">Add Story</a> - 
+		 <a class="add_epic_link button blue small"  epic_id="{{epic.id}}" href="#">Add Epic</a>
+	   </div>
+	   {% endcanwrite %}
+	 </span>
+	{% if epic.detail %}
+	<div class="epic_detail formatted_story_text">
+		 {{ epic.detail|markdown|link_stories:epic.project|safe }}
+	</div>
+	{% endif %}
+	 
+	 <ul epic_id="{{epic.id}}" id="epic_{{epic.id}}_list" class="epic_story_list">
+		{% for story in epic.stories_by_rank %}
+			  {% include "stories/single_block_story.html" %}
+		{% endfor %}
+	 </ul>			
+	
+</div>

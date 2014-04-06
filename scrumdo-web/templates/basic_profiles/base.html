@@ -1,0 +1,44 @@
+{% extends "site_base.html" %}
+
+{% load i18n %}
+
+{% block body_class %}profile{% endblock %}
+{% block body_div_class %}sideBar{% endblock %}
+
+{% if user.is_authenticated %}
+{% block panel %}
+<div id="panel" class="panel_borders">
+  <div class="box">
+    <div class="box-content">
+      <a href="{% url acct_email %}">{% trans "E-Mail Addresses" %}
+    </div><!--box-content-->
+   
+    <div class="box-content">
+      <a href="/openid/associations/">{% trans "OpenID Associations" %}</a>
+    </div><!--box-content-->
+    <div class="box-content">
+      {% if user.password %}
+      <a href="{% url acct_passwd %}">{% trans "Change Password" %}</a>
+      {% else %}
+      <a href="{% url acct_passwd_set %}">{% trans "Set Password" %}</a>
+      {% endif %}
+    </div><!--box-content-->
+    {% if user.password and request.openids %}
+    <div class="box-content">
+      <a href="{% url acct_passwd_delete %}">{% trans "Delete Password" %}</a>
+    </div><!--box-content-->
+    {% endif %}
+    <div class="box-content">
+      <a href="{% url avatar_change %}">{% trans "Avatar" %}</a>
+    </div><!--box-content-->
+     <div class="box-content">
+       <a href="{% url developer_user_keys %}">{% trans "API Access Keys" %}</a>
+    </div><!--box-content-->
+          <div class="box-content">
+            <a href="{% url developer_home %}api/start">{% trans "Developer" %}</a>
+         </div><!--box-content-->
+
+  </div><!--box-->
+</div><!--panel-->
+{% endblock %}
+{% endif %}

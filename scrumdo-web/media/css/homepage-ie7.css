@@ -1,0 +1,43 @@
+
+#body #leftColumn {
+	display: inline;	
+}
+
+#body #middleColumn {
+	display: inline;	
+}
+
+#body #middleColumn2 {
+	display: inline;	
+}
+	
+}
+.infoBlob {
+	display: inline;
+}
+
+#body #rightColumn {
+	width: 242px;
+	display: inline;	
+}
+
+#higlightContentText {
+	display: inline;
+}
+
+#highlightContentImage {
+	display: inline;
+}
+.featureBox {
+	display: inline;
+}
+
+#homepage_testimonials{
+    display: inline;
+    width: 230px;
+}
+
+#homepage_thumbnail_grid {
+    display: inline;
+    width: 600px;
+}

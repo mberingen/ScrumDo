@@ -1,0 +1,25 @@
+{% extends group_base|default:"site_base.html" %}
+
+{% load i18n %}
+{% load group_tags %}
+
+{% block body_class %}tasks{% endblock %}
+{% block body_div_class %}sideBar{% endblock %}
+
+{% block panel %}
+    {% if user.is_authenticated %}
+<div class="box">
+  <div class="box-title">
+    Tools
+  </div>
+  <div class="box-content">
+    <a href="{% groupurl task_add group %}">{% trans "Add Task" %}</a><br/>
+    <a href="{% groupurl tasks_for_user group username=user.username %}">{% trans "Your Tasks" %}</a><br/>
+    <a href="{% groupurl task_list group %}">{% trans "All Tasks" %}</a><br/>
+    <a href="{% groupurl tasks_history_list group %}">{% trans "Tasks History" %}</a><br/>
+  </div><!--box-content-->
+</div><!--box-->
+{% else %}
+&nbsp;
+{% endif %}
+{% endblock %}
