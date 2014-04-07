@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import sys
-
-sys.path.append("/Users/marc/Sites/ScrumDo_2_6/ScrumDo/scrumdo-web/pinax_apps")
-
 from os.path import abspath, dirname, join
+
+PROJECT_ROOT = abspath(dirname(__file__))
+pinax_apps = join(PROJECT_ROOT, 'pinax_apps')
+sys.path.append(pinax_apps)
 
 try:
     import pinax
@@ -15,7 +16,7 @@ from django.conf import settings
 from django.core.management import setup_environ, execute_from_command_line
 
 try:
-    import settings as settings_mod # Assumed to be in the same directory.
+    import settings as settings_mod  # Assumed to be in the same directory.
 except ImportError:
     sys.stderr.write("Error: Can't find the file 'settings.py' in the directory containing %r. It appears you've customized things.\nYou'll have to run django-admin.py, passing it your settings module.\n(If the file settings.py does indeed exist, it's causing an ImportError somehow.)\n" % __file__)
     sys.exit(1)

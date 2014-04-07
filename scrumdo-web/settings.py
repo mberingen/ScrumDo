@@ -29,14 +29,11 @@ import pinax
 import logging
 
 
-# TODO: relatief pad maken
-
-sys.path.append("/Users/marc/Sites/ScrumDo_2_6/ScrumDo/scrumdo-web/pinax_apps")
-
 PINAX_ROOT = os.path.abspath(os.path.dirname(pinax.__file__))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
-# print(PROJECT_ROOT)
+pinax_apps = os.path.join(PROJECT_ROOT, 'pinax_apps')
+sys.path.append(pinax_apps)
 
 # tells Pinax to use the default theme
 PINAX_THEME = 'default'
@@ -60,11 +57,11 @@ MANAGERS = ADMINS
 
 # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'ado_mssql'.
 DATABASE_ENGINE = 'postgresql_psycopg2'
-DATABASE_NAME = 'scrumdo26'       # Or path to database file if using sqlite3.
-DATABASE_USER = 'marc'             # Not used with sqlite3.
+DATABASE_NAME = ''       # Or path to database file if using sqlite3.
+DATABASE_USER = ''             # Not used with sqlite3.
 DATABASE_PASSWORD = ''         # Not used with sqlite3.
 # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_HOST = 'localhost'
+DATABASE_HOST = ''
 # Set to empty string for default. Not used with sqlite3.
 DATABASE_PORT = '5432'
 
@@ -73,7 +70,8 @@ DATABASE_PORT = '5432'
 # although not all variations may be possible on all operating systems.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'US/Eastern'
+TIME_ZONE = 'Europe/Amsterdam'
+USE_TZ = True
 
 # Language code for this installation. All choices can be found here:
 # http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
