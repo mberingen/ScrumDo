@@ -7,3 +7,5 @@ runserver.log
 selenium-server.log
 pre-test.json
 current_static_path
+whoosh_index/*
+scrumdo-web/whoosh_index/*
