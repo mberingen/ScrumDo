@@ -35,12 +35,12 @@ else:
     signup_view = "signup_codes.views.signup"
 
 feeds = {
-    'project':feeds.ProjectStories
+    'project': feeds.ProjectStories
 }
 
 
 urlpatterns = patterns('',
-    url(r'^$', "projects.views.home" , name="home"),
+    url(r'^$', "projects.views.home", name="home"),
     url(r'^robots.txt$', direct_to_template, {'template': 'robots.txt'}),
     url(r'^status$', views.status),
     url(r'^crossdomain.xml$', direct_to_template, {'template': 'crossdomain.xml'}),
@@ -68,7 +68,7 @@ urlpatterns = patterns('',
     (r'^developer/', include('developer.urls')),
     (r'^favorites/', include('favorites.urls')),
     (r'^scrum_log/', include('scrum_log.urls')),
-    # (r'^search/', include('haystack.urls')),
+    (r'^search/', include('haystack.urls')),
     url(r'^usage', "projects.views.usage", name="usage"),
 )
 
