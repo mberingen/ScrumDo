@@ -89,12 +89,12 @@ class AddStoryForm( forms.ModelForm ):
         self.fields["extra_1"].widget = forms.widgets.Textarea(attrs={'rows':3, 'cols':50})
         self.fields["extra_2"].widget = forms.widgets.Textarea(attrs={'rows':3, 'cols':50})
         self.fields["extra_3"].widget = forms.widgets.Textarea(attrs={'rows':3, 'cols':50})
-        
+
         epics = [ (epic.id, ("#E%d %s" % (epic.local_id, epic.summary))[:150] ) for epic in project.epics.all().order_by("local_id") ]
         epics.insert(0,("","----------") )
         self.fields["epic"].choices=epics
         self.fields["epic"].required = False
-        
+
         if project.categories:
             choices = [(c.strip(),c.strip()) for c in project.categories.split(",")]
             choices.insert(0,("","----------"))
@@ -118,12 +118,12 @@ class EpicForm( forms.ModelForm ):
 
         self.fields["summary"].widget = forms.TextInput()
         self.fields["summary"].widget.attrs['size'] = 60
-        
+
         epics = [ (epic.id, ("#E%d %s" % (epic.local_id, epic.summary)[:150]) ) for epic in project.epics.all().order_by("local_id") ]
         epics.insert(0,("","----------") )
         self.fields["parent"].choices=epics
-        self.fields["parent"].required = False        
-        
+        self.fields["parent"].required = False
+
 
     def clean_points(self):
         try:
@@ -142,7 +142,7 @@ class EpicForm( forms.ModelForm ):
         for epic in self.instance.children.exclude(archived=archived):
             epic.archived = archived
             epic.save()
-            
+
         return super(EpicForm, self).save(**kwargs)
 
     class Meta:
@@ -166,12 +166,12 @@ class StoryForm( forms.ModelForm ):
         members = project.all_member_choices()
         members.insert(0,("","---------"))
         self.fields["assignee"].choices = members
-        
+
         epics = [ (epic.id, "#E%d %s" % (epic.local_id, epic.summary) ) for epic in project.epics.exclude(archived=True).order_by("local_id") ]
         epics.insert(0,("","----------") )
         self.fields["epic"].choices=epics
         self.fields["epic"].required = False
-        
+
         self.fields["detail"].widget = forms.widgets.Textarea(attrs={'rows':3, 'cols':50})
         self.fields["extra_1"].widget = forms.widgets.Textarea(attrs={'rows':3, 'cols':50})
         self.fields["extra_2"].widget = forms.widgets.Textarea(attrs={'rows':3, 'cols':50})
@@ -197,7 +197,7 @@ class ProjectForm(forms.ModelForm):
 
     slug = forms.SlugField(max_length=20,
         help_text = _("a short version of the name consisting only of letters, numbers, underscores and hyphens."),
-        error_message = _("This value must contain only letters, numbers, underscores and hyphens."))
+        error_messages={'invalid': _("This value must contain only letters, numbers, underscores and hyphens.")})
 
     def clean_slug(self):
         if Project.objects.filter(slug__iexact=self.cleaned_data["slug"]).count() > 0:

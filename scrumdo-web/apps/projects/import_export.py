@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 ezxf = xlwt.easyxf
 
+
 def exportIteration(iteration, format, file_name=None ):
     """ Exports an iteration, format should be xls, xml or csv. """
     logger.info("Exporting iteration %s %d" % (iteration.project.slug, iteration.id) )
@@ -68,7 +69,7 @@ def exportProject( project, file_name=None ):
     if not file_name:
         file_name = "project"
     response = HttpResponse( mimetype="Application/vnd.ms-excel")
-    response['Content-Disposition'] = 'attachment; filename=%s.xls'%file_name 
+    response['Content-Disposition'] = 'attachment; filename=%s.xls'%file_name
     stories = project.stories.all().order_by("iteration","rank")
     w = xlwt.Workbook(encoding='utf8')
     ws = w.add_sheet( "All Stories" )
