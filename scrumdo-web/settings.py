@@ -136,6 +136,7 @@ MIDDLEWARE_CLASSES = (
     'django_sorting.middleware.SortingMiddleware',
     'pinax.middleware.security.HideSensistiveFieldsMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
+    'gadjo.requestprovider.middleware.RequestProvider',
 )
 
 ROOT_URLCONF = 'urls'
