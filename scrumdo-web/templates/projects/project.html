@@ -16,7 +16,7 @@
 {% load scrum_log_tags %}
 
 {% block head_title %}{{ project.name }}{% endblock %}
-    
+
 {% block body_div_class %}narrow_body_with_sidebar{% endblock %}
 
 
@@ -45,7 +45,7 @@
 
     <h2>Add a story</h2>
     <p>Use the form at the top of this page to add a new story to your backlog.</p>
-    
+
     <b>Tip:</b> Burn Up charts are updated nightly.
   </div>
 {% endifequal %}
@@ -55,7 +55,7 @@
       <em>{{iteration.start_date|date:"M d, Y"}} - {{iteration.end_date|date:"M d, Y"}}</em>
       <br/>
       {% if iteration.points_log.count %}
-        <div id="iterationBurndown_{{iteration.id}}" style="width:740px;height:300px;"></div>  
+        <div id="iterationBurndown_{{iteration.id}}" style="width:740px;height:300px;"></div>
       {% else %}
       <img src="{{ STATIC_URL }}images/burndown.png">
       {% endif %}
@@ -73,19 +73,19 @@
 	  <a id="view_scrum_log_link" href="#">View Scrum Log</a>
 	  {% news_feed %}
 	</div>
-	
+
 	<div id="scrum_log" style="display:none">
   	  <h1>Scrum Log</h1>
 	  <a id="view_news_feed_link" href="#">View News Feed</a>
 	  {% scrum_log project %}
 	</div>
-	
+
 {% endblock %}
 
 {% block extra_body %}
 	<script type="text/javascript" src="{{STATIC_URL}}js/jquery.cookie.js"></script>
     <script type="text/javascript">
-    
+
         function updateStoryList() // occurs when the add story ajax form is successful.
         {
           try
@@ -100,17 +100,17 @@
            		   $("#iteration_list").html(responseText);
           	    }
           	});
-          	
+
           }
           catch( err )
           {  // ignore errors
           }
-          
+
         }
-    
+
         $(document).ready(function() {
-	
-				
+
+
 				$("#view_scrum_log_link").click(function(){
 					$("#scrum_log").show();
 					$("#news_feed").hide();
@@ -123,15 +123,15 @@
 					$.cookie("default_proj_view", "news_feed");
 					return false;
 				});
-				
+
 				// Make the view sticky across pageviews...
 				if ($.cookie("default_proj_view") == "scrum_log")
-			    { 
+			    {
 					$("#scrum_log").show();
 					$("#news_feed").hide();
 			    }
 
-	
+
                 setupNewsItemMoreLinks();
 
                 var options = {
@@ -139,25 +139,25 @@
                    xaxis: { minTickSize: [1, "day"] , mode: "time", timeformat: "%m/%d/%y" },
                    grid: { markings: weekendAreas } ,
                    legend: {    position: "nw" },
-                   series: { lines: {   show: true , fill:true  }, 
-                             points: { radius:5, show: true, fill: true} 
-                           }                   
+                   series: { lines: {   show: true , fill:true  },
+                             points: { radius:5, show: true, fill: true}
+                           }
                 };
-				       
+
                 generateBurnDown( "#overallBurndown", "{{project.slug}}" , null , 0);
-                
-				$("body").bind("storyListChanged", updateStoryList ); 
-				
+
+				$("body").bind("storyListChanged", updateStoryList );
+
                {% for iteration in project.get_current_iterations %}
                  generateBurnDown( "#iterationBurndown_{{iteration.id}}", "{{project.slug}}" , "{{iteration.id}}" , 0.25);
                {% endfor %}
-               
-               {% if GOOGLE_ANALYTICS %}     
-                  _gaq.push(['_trackEvent',"ViewPage", "Project"]); 
-               {% endif %}           
-               
+
+               {% if GOOGLE_ANALYTICS %}
+                  _gaq.push(['_trackEvent',"ViewPage", "Project"]);
+               {% endif %}
+
         });
 
     </script>
-    
+
 {% endblock %}

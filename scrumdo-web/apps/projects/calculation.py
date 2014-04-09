@@ -8,22 +8,24 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def onDemandCalculateVelocity( project ):
+
+def onDemandCalculateVelocity(project):
     if not on_demand_velocity.increaseAllowed(project=project):
         return
-    calculateProject( project )
+    calculateProject(project)
 
-def calculatePoints( stories, epics ):
-    points_total = 0;
-    points_claimed = 0;
+
+def calculatePoints(stories, epics):
+    points_total = 0
+    points_claimed = 0
     for story in stories:
         try:
             story_points = story.points_value()
             points_total += story_points
-            if( story.status == Story.STATUS_DONE):
+            if(story.status == Story.STATUS_DONE):
                 points_claimed += story_points
         except ValueError:
-            pass # probably ? or infinity
+            pass  # probably ? or infinity
 
     for epic in epics:
         try:
@@ -31,14 +33,14 @@ def calculatePoints( stories, epics ):
         except ValueError:
             pass
 
-
     return (points_total, points_claimed)
 
-def calculateProjectVelocity( project, total_project_points ):
+
+def calculateProjectVelocity(project, total_project_points):
     today = date.today()
     # Loop through all completed iterations and gather info
     iteration_points = []
-    for iteration in project.iterations.filter( end_date__lte=today):
+    for iteration in project.iterations.filter(end_date__lte=today):
         if not iteration.default_iteration and iteration.include_in_velocity:
             points = 0
             for story in iteration.stories.all():
@@ -46,70 +48,70 @@ def calculateProjectVelocity( project, total_project_points ):
                     try:
                         points += story.points_value()
                     except ValueError:
-                        pass # probably ? or infinity
-            iteration_points.append( points )
+                        pass  # probably ? or infinity
+            iteration_points.append(points)
 
     velocity = 0
     if project.velocity_type == project.VELOCITY_TYPE_AVERAGE:
-        velocity = calculateAverage( iteration_points )
+        velocity = calculateAverage(iteration_points)
     elif project.velocity_type == project.VELOCITY_TYPE_AVERAGE_5:
-        velocity = calculateAverageLastN( iteration_points , 5)
+        velocity = calculateAverageLastN(iteration_points, 5)
     elif project.velocity_type == project.VELOCITY_TYPE_AVERAGE_3:
-        velocity = calculateAverageLastN( iteration_points , 3)
+        velocity = calculateAverageLastN(iteration_points, 3)
     else:
-        velocity = calculateMedian( iteration_points )
+        velocity = calculateMedian(iteration_points)
 
     project.velocity = velocity
     if project.velocity > 0:
-        project.iterations_left = int( total_project_points / project.velocity)
+        project.iterations_left = int(total_project_points / project.velocity)
 
-    project.save();
+    project.save()
 
 
-def calculateMedian( iteration_points ):
+def calculateMedian(iteration_points):
     if len(iteration_points) == 0:
         return 0
-    sorted_list = sorted( iteration_points )
-    return sorted_list[ int(len( iteration_points ) / 2 ) ]
+    sorted_list = sorted(iteration_points)
+    return sorted_list[int(len(iteration_points) / 2)]
 
 
-
-def calculateAverageLastN( iteration_points , n):
+def calculateAverageLastN(iteration_points, n):
     if len(iteration_points) <= n:
-        return calculateAverage( iteration_points )
-    total = sum( iteration_points[-n:] )
+        return calculateAverage(iteration_points)
+    total = sum(iteration_points[-n:])
     return total / n
 
 
-
-def calculateAverage( iteration_points ):
-    if len( iteration_points ) == 0:
+def calculateAverage(iteration_points):
+    if len(iteration_points) == 0:
         return 0
-    total = sum( iteration_points )
-    #print "%d / %d" % (total, len(iteration_points))
-    return total / len( iteration_points )
+    total = sum(iteration_points)
+    # print "%d / %d" % (total, len(iteration_points))
+    return total / len(iteration_points)
 
 
-def logPoints( related_object, points_claimed, points_total ):
+def logPoints(related_object, points_claimed, points_total):
     today = date.today()
     # logger.info("%s %d %f" % (related_object, points_claimed, points_total) )
     try:
-        log = related_object.points_log.get( date=today )
-        log.points_claimed=points_claimed
-        log.points_total=points_total
+        log = related_object.points_log.get(date=today)
+        log.points_claimed = points_claimed
+        log.points_total = points_total
         log.save()
         # logger.debug("logPoints found a previous record.")
     except:
-        log = PointsLog( points_claimed=points_claimed, points_total=points_total, related_object=related_object)
+        log = PointsLog(points_claimed=points_claimed,
+                        points_total=points_total, related_object=related_object)
         log.save()
         # logger.debug("logPoints created a new record.")
 
-def calculateProject( project ):
+
+def calculateProject(project):
     if not project.active:
         return
     stories = project.stories.all()
     epics = project.epics.all().exclude(archived=True)
-    points = calculatePoints( stories, epics )
+    points = calculatePoints(stories, epics)
 
     total_project_points = points[0]
 
@@ -119,17 +121,17 @@ def calculateProject( project ):
     # log = PointsLog( points_claimed=points[1], points_total=points[0], related_object=project)
     # log.save();
 
-
-    yesterday = today - timedelta( days=1 )
-    tomorrow = today +  timedelta( days=1 )
+    yesterday = today - timedelta(days=1)
+    tomorrow = today + timedelta(days=1)
     points_total = 0
 
-    calculateProjectVelocity( project , total_project_points)
+    calculateProjectVelocity(project, total_project_points)
 
-    for iteration in project.iterations.filter( start_date__lte=tomorrow, end_date__gte=yesterday):
-        if( iteration != project.get_default_iteration() ):
-            points = calculatePoints( iteration.stories.all(), [] );
-            if points[0] > 0:  # only logging active iterations with stuff in them
+    for iteration in project.iterations.filter(start_date__lte=tomorrow, end_date__gte=yesterday):
+        if(iteration != project.get_default_iteration()):
+            points = calculatePoints(iteration.stories.all(), [])
+            # only logging active iterations with stuff in them
+            if points[0] > 0:
                 logPoints(iteration, points[1], points[0])
                 # log = PointsLog( points_claimed=points[1], points_total=points[0], related_object=iteration)
                 # log.save();

@@ -9,11 +9,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
+
     def handle(self, *args, **options):
         projects = Project.objects.filter(active=True)
         for project in projects:
             try:
-                calculateProject( project )
+                calculateProject(project)
             except:
                 logger.error("Could not calculate project %s" % project.slug)
