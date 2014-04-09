@@ -22,6 +22,7 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpRespons
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponse
 from django.core import serializers
@@ -189,7 +190,7 @@ def team_create(request, organization_slug):
             team.organization = organization
             team.save()
 
-            request.user.message_set.create(message="Team Created.")
+            messages.info(request, "Team Created.")
             return HttpResponseRedirect(reverse("team_summary",  kwargs={'organization_slug':organization.slug}))
     else:
         form = TeamForm()

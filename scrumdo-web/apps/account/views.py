@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.db.models import Q
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
+from django.contrib import messages
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.core.urlresolvers import reverse
@@ -27,6 +28,7 @@ association_model = models.get_model('django_openid', 'Association')
 if association_model is not None:
     from django_openid.models import UserOpenidAssociation
 
+
 def login(request, form_class=LoginForm, template_name="account/login.html",
           success_url=None, associate_openid=False, openid_success_url=None,
           url_required=False, extra_context=None):
@@ -43,15 +45,15 @@ def login(request, form_class=LoginForm, template_name="account/login.html",
                         user=form.user, openid=openid.openid
                     )
                 success_url = openid_success_url or success_url
-                
+
             # Redirect to http or https based on account
             if personal_ssl_access.increaseAllowed(user=form.user):
                 success_url = "%s%s" % (settings.SSL_BASE_URL, success_url)
                 logger.debug("Subscriber %s" % success_url)
             else:
-                success_url = "%s%s" % (settings.BASE_URL, success_url)                
+                success_url = "%s%s" % (settings.BASE_URL, success_url)
                 logger.debug("NonSubscriber %s" % success_url)
-                    
+
             return HttpResponseRedirect(success_url)
     else:
         form = form_class()
@@ -62,16 +64,16 @@ def login(request, form_class=LoginForm, template_name="account/login.html",
     }
     ctx.update(extra_context)
     return render_to_response(template_name, ctx,
-        context_instance = RequestContext(request)
-    )
+                              context_instance=RequestContext(request)
+                              )
+
 
 def signup(request, form_class=SignupForm,
-        template_name="account/signup.html", success_url=None):
+           template_name="account/signup.html", success_url=None):
 
+    success_url = get_default_redirect(
+        request, default_redirect_to=success_url)
 
-    success_url = get_default_redirect(request, default_redirect_to=success_url)
-        
-        
     if request.method == "POST":
         form = form_class(request.POST)
         if form.is_valid():
@@ -88,18 +90,19 @@ def signup(request, form_class=SignupForm,
         form = form_class()
     return render_to_response(template_name, {
         "form": form,
-        "success_url":success_url
+        "success_url": success_url
     }, context_instance=RequestContext(request))
+
 
 @login_required
 def email(request, form_class=AddEmailForm,
-        template_name="account/email.html"):
+          template_name="account/email.html"):
     if request.method == "POST" and request.user.is_authenticated():
         if request.POST["action"] == "add":
             add_email_form = form_class(request.user, request.POST)
             if add_email_form.is_valid():
                 add_email_form.save()
-                add_email_form = form_class() # @@@
+                add_email_form = form_class()  # @@@
         else:
             add_email_form = form_class()
             if request.POST["action"] == "send":
@@ -109,8 +112,8 @@ def email(request, form_class=AddEmailForm,
                         user=request.user,
                         email=email,
                     )
-                    request.user.message_set.create(
-                        message=_("Confirmation email sent to %(email)s") % {
+                    messages.info(request,
+                        _("Confirmation email sent to %(email)s") % {
                             'email': email,
                         })
                     EmailConfirmation.objects.send_confirmation(email_address)
@@ -124,8 +127,8 @@ def email(request, form_class=AddEmailForm,
                         email=email
                     )
                     email_address.delete()
-                    request.user.message_set.create(
-                        message=_("Removed email address %(email)s") % {
+                    messages.info(request,
+                        ("Removed email address %(email)s") % {
                             'email': email,
                         })
                 except EmailAddress.DoesNotExist:
@@ -143,9 +146,10 @@ def email(request, form_class=AddEmailForm,
         "add_email_form": add_email_form,
     }, context_instance=RequestContext(request))
 
+
 @login_required
 def password_change(request, form_class=ChangePasswordForm,
-        template_name="account/password_change.html"):
+                    template_name="account/password_change.html"):
     if not request.user.password:
         return HttpResponseRedirect(reverse("acct_passwd_set"))
     if request.method == "POST":
@@ -159,9 +163,10 @@ def password_change(request, form_class=ChangePasswordForm,
         "password_change_form": password_change_form,
     }, context_instance=RequestContext(request))
 
+
 @login_required
 def password_set(request, form_class=SetPasswordForm,
-        template_name="account/password_set.html"):
+                 template_name="account/password_set.html"):
     if request.user.password:
         return HttpResponseRedirect(reverse("acct_passwd"))
     if request.method == "POST":
@@ -175,11 +180,12 @@ def password_set(request, form_class=SetPasswordForm,
         "password_set_form": password_set_form,
     }, context_instance=RequestContext(request))
 
+
 @login_required
 def password_delete(request, template_name="account/password_delete.html"):
     # prevent this view when openids is not present or it is empty.
     if not request.user.password or \
-        (not hasattr(request, "openids") or \
+        (not hasattr(request, "openids") or
             not getattr(request, "openids", None)):
         return HttpResponseForbidden()
     if request.method == "POST":
@@ -189,9 +195,10 @@ def password_delete(request, template_name="account/password_delete.html"):
     return render_to_response(template_name, {
     }, context_instance=RequestContext(request))
 
+
 def password_reset(request, form_class=ResetPasswordForm,
-        template_name="account/password_reset.html",
-        template_name_done="account/password_reset_done.html"):
+                   template_name="account/password_reset.html",
+                   template_name_done="account/password_reset_done.html"):
     if request.method == "POST":
         password_reset_form = form_class(request.POST)
         if password_reset_form.is_valid():
@@ -206,8 +213,9 @@ def password_reset(request, form_class=ResetPasswordForm,
         "password_reset_form": password_reset_form,
     }, context_instance=RequestContext(request))
 
+
 def password_reset_from_key(request, key, form_class=ResetPasswordKeyForm,
-        template_name="account/password_reset_from_key.html"):
+                            template_name="account/password_reset_from_key.html"):
     if request.method == "POST":
         password_reset_key_form = form_class(request.POST)
         if password_reset_key_form.is_valid():
@@ -220,9 +228,10 @@ def password_reset_from_key(request, key, form_class=ResetPasswordKeyForm,
         "form": password_reset_key_form,
     }, context_instance=RequestContext(request))
 
+
 @login_required
 def timezone_change(request, form_class=ChangeTimezoneForm,
-        template_name="account/timezone_change.html"):
+                    template_name="account/timezone_change.html"):
     if request.method == "POST":
         form = form_class(request.user, request.POST)
         if form.is_valid():
@@ -233,9 +242,10 @@ def timezone_change(request, form_class=ChangeTimezoneForm,
         "form": form,
     }, context_instance=RequestContext(request))
 
+
 @login_required
 def language_change(request, form_class=ChangeLanguageForm,
-        template_name="account/language_change.html"):
+                    template_name="account/language_change.html"):
     if request.method == "POST":
         form = form_class(request.user, request.POST)
         if form.is_valid():
@@ -247,6 +257,7 @@ def language_change(request, form_class=ChangeLanguageForm,
     return render_to_response(template_name, {
         "form": form,
     }, context_instance=RequestContext(request))
+
 
 @login_required
 def other_services(request, template_name="account/other_services.html"):
@@ -264,8 +275,8 @@ def other_services(request, template_name="account/other_services.html"):
                 twitter_authorized = twitter_verify_credentials(
                     twitter_account)
                 if not twitter_authorized:
-                    request.user.message_set.create(
-                        message=ugettext("Twitter authentication failed"))
+                    messages.info(request,
+                        ugettext("Twitter authentication failed"))
                 else:
                     twitter_form.save()
     else:
@@ -278,11 +289,13 @@ def other_services(request, template_name="account/other_services.html"):
         "twitter_authorized": twitter_authorized,
     }, context_instance=RequestContext(request))
 
+
 @login_required
 def other_services_remove(request):
     # TODO: this is a bit coupled.
     OtherServiceInfo.objects.filter(user=request.user).filter(
         Q(key="twitter_user") | Q(key="twitter_password")
     ).delete()
-    request.user.message_set.create(message=ugettext("Removed twitter account information successfully."))
+    messages.info(request,
+        ugettext("Removed twitter account information successfully."))
     return HttpResponseRedirect(reverse("acct_other_services"))

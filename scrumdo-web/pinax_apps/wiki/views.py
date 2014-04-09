@@ -50,6 +50,7 @@ def get_real_ip(request):
         return request.META['HTTP_X_FORWARDED_FOR']
     return request.META['REMOTE_ADDR']
 
+
 def get_articles_by_group(article_qs, group_slug=None, bridge=None):
     group = None
     if group_slug is not None:
@@ -62,11 +63,13 @@ def get_articles_by_group(article_qs, group_slug=None, bridge=None):
         article_qs = article_qs.filter(object_id=None)
     return article_qs, group
 
+
 def get_articles_for_object(object, article_qs=None):
     if article_qs is None:
         article_qs = ALL_ARTICLES
-    return article_qs.filter( content_type=get_ct(object),
-                                       object_id=object.id)
+    return article_qs.filter(content_type=get_ct(object),
+                             object_id=object.id)
+
 
 def get_url(urlname, group=None, args=None, kw=None, bridge=None):
     if group is None:
@@ -74,9 +77,10 @@ def get_url(urlname, group=None, args=None, kw=None, bridge=None):
         return reverse(urlname, args=args, kwargs=kw)
     else:
         return bridge.reverse(urlname, group, kwargs=kw)
-        
+
 
 class ArticleEditLock(object):
+
     """ A soft lock to edting an article.
     """
 
@@ -87,11 +91,11 @@ class ArticleEditLock(object):
 
         if message_template is None:
             message_template = ('Possible edit conflict:'
-            ' another user started editing this article at %s')
+                                ' another user started editing this article at %s')
 
         self.message_template = message_template
 
-        cache.set(title, self, WIKI_LOCK_DURATION*60)
+        cache.set(title, self, WIKI_LOCK_DURATION * 60)
 
     def create_message(self, request):
         """ Send a message to the user if there is another user
@@ -99,8 +103,8 @@ class ArticleEditLock(object):
         """
         if not self.is_mine(request):
             user = request.user
-            user.message_set.create(
-                message=self.message_template%self.created_at)
+            messages.info(request,
+                          self.message_template % self.created_at)
 
     def is_mine(self, request):
         return self.user_ip == get_real_ip(request)
@@ -115,6 +119,7 @@ def has_read_perm(user, group, is_member, is_private):
     if (is_private is not None) and is_private(group):
         return False
     return True
+
 
 def has_write_perm(user, group, is_member):
     """ Return True if the user have permission to edit Articles,
@@ -175,7 +180,7 @@ def article_list(request,
 
 @login_required
 def view_article(request, title,
-                 ArticleClass=Article, # to create an unsaved instance
+                 ArticleClass=Article,  # to create an unsaved instance
                  group_slug=None, bridge=None,
                  article_qs=ALL_ARTICLES,
                  template_name='view.html',
@@ -233,7 +238,7 @@ def view_article(request, title,
 def edit_article(request, title,
                  group_slug=None, bridge=None,
                  article_qs=ALL_ARTICLES,
-                 ArticleClass=Article, # to get the DoesNotExist exception
+                 ArticleClass=Article,  # to get the DoesNotExist exception
                  ArticleFormClass=ArticleForm,
                  template_name='edit.html',
                  template_dir='wiki',
@@ -255,7 +260,6 @@ def edit_article(request, title,
         group = None
         allow_read = allow_write = True
 
-
     if not allow_write:
         return HttpResponseForbidden()
 
@@ -276,17 +280,17 @@ def edit_article(request, title,
                     user_message = u"Your article was created successfully."
                 else:
                     user_message = u"Your article was edited successfully."
-                request.user.message_set.create(message=user_message)
+                messages.info(request, user_message)
 
             if ((article is None) and (group_slug is not None)):
                 form.group = group
 
             new_article, changeset = form.save()
-            
+
             url = get_url('wiki_article', group, kw={
                 'title': new_article.title,
             }, bridge=bridge)
-            
+
             return redirect_to(request, url)
 
     elif request.method == 'GET':
@@ -515,15 +519,14 @@ def revert_to_revision(request, title,
         else:
             article.revert_to(revision, get_real_ip(request))
 
-
         if request.user.is_authenticated():
-            request.user.message_set.create(
-                message=u"The article was reverted successfully.")
-                
+            messages.info(request,
+                          u"The article was reverted successfully.")
+
         url = get_url('wiki_article_history', group, kw={
             'title': title,
         }, bridge=bridge)
-        
+
         return redirect_to(request, url)
 
     return HttpResponseNotAllowed(['POST'])
@@ -562,7 +565,7 @@ def search_article(request,
             url = get_url('wiki_article', group, kw={
                 'title': search_term,
             }, bridge=bridge)
-            
+
             return redirect_to(request, url)
 
     return HttpResponseNotAllowed(['POST'])
@@ -643,11 +646,11 @@ def observe_article(request, title,
 
         notification.observe(article, request.user,
                              'wiki_observed_article_changed')
-        
+
         url = get_url('wiki_article', group, kw={
             'title': article.title,
         }, bridge=bridge)
-        
+
         return redirect_to(request, url)
 
     return HttpResponseNotAllowed(['POST'])
@@ -687,11 +690,11 @@ def stop_observing_article(request, title,
         article = get_object_or_404(article_qs, **article_args)
 
         notification.stop_observing(article, request.user)
-        
+
         url = get_url('wiki_article', group, kw={
             'title': article.title,
         }, bridge=bridge)
-        
+
         return redirect_to(request, url)
     return HttpResponseNotAllowed(['POST'])
 
@@ -704,8 +707,8 @@ def article_history_feed(request, feedtype, title,
                          is_private=None,
                          *args, **kw):
 
-    feeds = {'rss' : RssArticleHistoryFeed,
-             'atom' : AtomArticleHistoryFeed}
+    feeds = {'rss': RssArticleHistoryFeed,
+             'atom': AtomArticleHistoryFeed}
     ArticleHistoryFeed = feeds.get(feedtype, RssArticleHistoryFeed)
 
     try:
@@ -730,8 +733,8 @@ def history_feed(request, feedtype,
                  is_private=None,
                  *args, **kw):
 
-    feeds = {'rss' : RssHistoryFeed,
-             'atom' : AtomHistoryFeed}
+    feeds = {'rss': RssHistoryFeed,
+             'atom': AtomHistoryFeed}
     HistoryFeed = feeds.get(feedtype, RssHistoryFeed)
 
     try:

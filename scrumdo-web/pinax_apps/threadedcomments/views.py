@@ -1,6 +1,7 @@
 from django.http import HttpResponseRedirect, Http404, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext, Context, Template
 from django.utils.http import urlquote
@@ -9,15 +10,17 @@ from threadedcomments.forms import FreeThreadedCommentForm, ThreadedCommentForm
 from threadedcomments.models import ThreadedComment, FreeThreadedComment, DEFAULT_MAX_COMMENT_LENGTH
 from threadedcomments.utils import JSONResponse, XMLResponse
 
+
 def _adjust_max_comment_length(form, field_name='comment'):
     """
     Sets the maximum comment length to that default specified in the settings.
     """
     form.base_fields['comment'].max_length = DEFAULT_MAX_COMMENT_LENGTH
 
+
 def _get_next(request):
     """
-    The part that's the least straightforward about views in this module is how they 
+    The part that's the least straightforward about views in this module is how they
     determine their redirects after they have finished computation.
 
     In short, they will try and determine the next place to go in the following order:
@@ -30,10 +33,12 @@ def _get_next(request):
     redirect to that previous page.
     4. Otherwise, the view raise a 404 Not Found.
     """
-    next = request.POST.get('next', request.GET.get('next', request.META.get('HTTP_REFERER', None)))
+    next = request.POST.get('next', request.GET.get(
+        'next', request.META.get('HTTP_REFERER', None)))
     if not next or next == request.path:
-        raise Http404 # No next url was supplied in GET or POST.
+        raise Http404  # No next url was supplied in GET or POST.
     return next
+
 
 def _preview(request, context_processors, extra_context, form_class=ThreadedCommentForm):
     """
@@ -43,8 +48,8 @@ def _preview(request, context_processors, extra_context, form_class=ThreadedComm
     _adjust_max_comment_length(form_class)
     form = form_class(request.POST or None)
     context = {
-        'next' : _get_next(request),
-        'form' : form,
+        'next': _get_next(request),
+        'form': form,
     }
     if form.is_valid():
         new_comment = form.save(commit=False)
@@ -53,26 +58,28 @@ def _preview(request, context_processors, extra_context, form_class=ThreadedComm
         context['comment'] = None
     return render_to_response(
         'threadedcomments/preview_comment.html',
-        extra_context, 
-        context_instance = RequestContext(request, context, context_processors)
+        extra_context,
+        context_instance=RequestContext(request, context, context_processors)
     )
+
 
 def free_comment(request, content_type=None, object_id=None, edit_id=None, parent_id=None, add_messages=False, ajax=False, model=FreeThreadedComment, form_class=FreeThreadedCommentForm, context_processors=[], extra_context={}):
     """
-    Receives POST data and either creates a new ``ThreadedComment`` or 
+    Receives POST data and either creates a new ``ThreadedComment`` or
     ``FreeThreadedComment``, or edits an old one based upon the specified parameters.
 
     If there is a 'preview' key in the POST request, a preview will be forced and the
     comment will not be saved until a 'preview' key is no longer in the POST request.
-    
+
     If it is an *AJAX* request (either XML or JSON), it will return a serialized
     version of the last created ``ThreadedComment`` and there will be no redirect.
-    
+
     If invalid POST data is submitted, this will go to the comment preview page
     where the comment may be edited until it does not contain errors.
     """
     if not edit_id and not (content_type and object_id):
-        raise Http404 # Must specify either content_type and object_id or edit_id
+        # Must specify either content_type and object_id or edit_id
+        raise Http404
     if "preview" in request.POST:
         return _preview(request, context_processors, extra_context, form_class=form_class)
     if edit_id:
@@ -93,31 +100,33 @@ def free_comment(request, content_type=None, object_id=None, edit_id=None, paren
         new_comment = form.save(commit=False)
         if not edit_id:
             new_comment.ip_address = request.META.get('REMOTE_ADDR', None)
-            new_comment.content_type = get_object_or_404(ContentType, id = int(content_type))
+            new_comment.content_type = get_object_or_404(
+                ContentType, id=int(content_type))
             new_comment.object_id = int(object_id)
         if model == ThreadedComment:
             new_comment.user = request.user
         if parent_id:
-            new_comment.parent = get_object_or_404(model, id = int(parent_id))
+            new_comment.parent = get_object_or_404(model, id=int(parent_id))
         new_comment.save()
         if model == ThreadedComment:
             if add_messages:
-                request.user.message_set.create(message="Your message has been posted successfully.")
+                messages.info(
+                    request, "Your message has been posted successfully.")
         else:
             request.session['successful_data'] = {
-                'name' : form.cleaned_data['name'],
-                'website' : form.cleaned_data['website'],
-                'email' : form.cleaned_data['email'],
+                'name': form.cleaned_data['name'],
+                'website': form.cleaned_data['website'],
+                'email': form.cleaned_data['email'],
             }
         if ajax == 'json':
-            return JSONResponse([new_comment,])
+            return JSONResponse([new_comment, ])
         elif ajax == 'xml':
-            return XMLResponse([new_comment,])
+            return XMLResponse([new_comment, ])
         else:
             return HttpResponseRedirect(_get_next(request))
-    elif ajax=="json":
-        return JSONResponse({'errors' : form.errors}, is_iterable=False)
-    elif ajax=="xml":
+    elif ajax == "json":
+        return JSONResponse({'errors': form.errors}, is_iterable=False)
+    elif ajax == "xml":
         template_str = """
 <errorlist>
     {% for error,name in errors %}
@@ -127,11 +136,13 @@ def free_comment(request, content_type=None, object_id=None, edit_id=None, paren
     {% endfor %}
 </errorlist>
         """
-        response_str = Template(template_str).render(Context({'errors' : zip(form.errors.values(), form.errors.keys())}))
+        response_str = Template(template_str).render(
+            Context({'errors': zip(form.errors.values(), form.errors.keys())}))
         return XMLResponse(response_str, is_iterable=False)
     else:
         return _preview(request, context_processors, extra_context, form_class=form_class)
-      
+
+
 def comment(*args, **kwargs):
     """
     Thin wrapper around free_comment which adds login_required status and also assigns
@@ -142,6 +153,7 @@ def comment(*args, **kwargs):
     return free_comment(*args, **kwargs)
 # Require login to be required, as request.user must exist and be valid.
 comment = login_required(comment)
+
 
 def can_delete_comment(comment, user):
     """
@@ -154,7 +166,8 @@ def can_delete_comment(comment, user):
         return True
     return False
 
-def comment_delete(request, object_id, model=ThreadedComment, extra_context = {}, context_processors = [], permission_callback=can_delete_comment):
+
+def comment_delete(request, object_id, model=ThreadedComment, extra_context={}, context_processors=[], permission_callback=can_delete_comment):
     """
     Deletes the specified comment, which can be either a ``FreeThreadedComment`` or a
     ``ThreadedComment``.  If it is a POST request, then the comment will be deleted
@@ -177,14 +190,14 @@ def comment_delete(request, object_id, model=ThreadedComment, extra_context = {}
             is_threaded_comment = False
         return render_to_response(
             'threadedcomments/confirm_delete.html',
-            extra_context, 
-            context_instance = RequestContext(
-                request, 
+            extra_context,
+            context_instance=RequestContext(
+                request,
                 {
-                    'comment' : tc, 
-                    'is_free_threaded_comment' : is_free_threaded_comment,
-                    'is_threaded_comment' : is_threaded_comment,
-                    'next' : _get_next(request),
+                    'comment': tc,
+                    'is_free_threaded_comment': is_free_threaded_comment,
+                    'is_threaded_comment': is_threaded_comment,
+                    'next': _get_next(request),
                 },
                 context_processors
             )

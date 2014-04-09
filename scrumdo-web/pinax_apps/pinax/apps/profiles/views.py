@@ -6,6 +6,7 @@ from django.conf import settings
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib import messages
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
@@ -49,12 +50,12 @@ def profiles(request, template_name="profiles/profiles.html", extra_context=None
 
 
 def profile(request, username, template_name="profiles/profile.html", extra_context=None):
-    
+
     if extra_context is None:
         extra_context = {}
-    
+
     other_user = get_object_or_404(User, username=username)
-    
+
     if request.user.is_authenticated():
         is_friend = Friendship.objects.are_friends(request.user, other_user)
         is_following = Following.objects.is_following(request.user, other_user)
@@ -68,7 +69,7 @@ def profile(request, username, template_name="profiles/profile.html", extra_cont
         is_friend = False
         is_me = False
         is_following = False
-    
+
     if is_friend:
         invite_form = None
         previous_invitations_to = None
@@ -76,13 +77,13 @@ def profile(request, username, template_name="profiles/profile.html", extra_cont
         if request.method == "POST":
             if request.POST.get("action") == "remove": # @@@ perhaps the form should just post to friends and be redirected here
                 Friendship.objects.remove(request.user, other_user)
-                request.user.message_set.create(message=_("You have removed %(from_user)s from friends") % {'from_user': other_user})
+                messages.info(request, _("You have removed %(from_user)s from friends") % {'from_user': other_user})
                 is_friend = False
                 invite_form = InviteFriendForm(request.user, {
                     'to_user': username,
                     'message': ugettext("Let's be friends!"),
                 })
-    
+
     else:
         if request.user.is_authenticated() and request.method == "POST":
             if request.POST.get("action") == "invite": # @@@ perhaps the form should just post to friends and be redirected here
@@ -100,7 +101,7 @@ def profile(request, username, template_name="profiles/profile.html", extra_cont
                         invitation = FriendshipInvitation.objects.get(id=invitation_id)
                         if invitation.to_user == request.user:
                             invitation.accept()
-                            request.user.message_set.create(message=_("You have accepted the friendship request from %(from_user)s") % {'from_user': invitation.from_user})
+                            messages.info(request, _("You have accepted the friendship request from %(from_user)s") % {'from_user': invitation.from_user})
                             is_friend = True
                             other_friends = Friendship.objects.friends_for_user(other_user)
                     except FriendshipInvitation.DoesNotExist:
@@ -110,7 +111,7 @@ def profile(request, username, template_name="profiles/profile.html", extra_cont
                         invitation = FriendshipInvitation.objects.get(id=invitation_id)
                         if invitation.to_user == request.user:
                             invitation.decline()
-                            request.user.message_set.create(message=_("You have declined the friendship request from %(from_user)s") % {'from_user': invitation.from_user})
+                            messages.info(request, _("You have declined the friendship request from %(from_user)s") % {'from_user': invitation.from_user})
                             other_friends = Friendship.objects.friends_for_user(other_user)
                     except FriendshipInvitation.DoesNotExist:
                         pass
@@ -119,10 +120,10 @@ def profile(request, username, template_name="profiles/profile.html", extra_cont
                 'to_user': username,
                 'message': ugettext("Let's be friends!"),
             })
-    
+
     previous_invitations_to = FriendshipInvitation.objects.invitations(to_user=other_user, from_user=request.user)
     previous_invitations_from = FriendshipInvitation.objects.invitations(to_user=request.user, from_user=other_user)
-    
+
     return render_to_response(template_name, dict({
         "is_me": is_me,
         "is_friend": is_friend,
@@ -137,17 +138,17 @@ def profile(request, username, template_name="profiles/profile.html", extra_cont
 
 @login_required
 def profile_edit(request, form_class=ProfileForm, **kwargs):
-    
+
     template_name = kwargs.get("template_name", "profiles/profile_edit.html")
-    
+
     if request.is_ajax():
         template_name = kwargs.get(
             "template_name_facebox",
             "profiles/profile_edit_facebox.html"
         )
-    
+
     profile = request.user.get_profile()
-    
+
     if request.method == "POST":
         profile_form = form_class(request.POST, instance=profile)
         if profile_form.is_valid():
@@ -157,7 +158,7 @@ def profile_edit(request, form_class=ProfileForm, **kwargs):
             return HttpResponseRedirect(reverse("profile_detail", args=[request.user.username]))
     else:
         profile_form = form_class(instance=profile)
-    
+
     return render_to_response(template_name, {
         "profile": profile,
         "profile_form": profile_form,

@@ -13,45 +13,53 @@ send_mail = get_send_mail()
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.contrib import messages
 
 from emailconfirmation.models import EmailAddress
-from account.models import Account
+from account.models import Account, PasswordReset
 
 from timezones.forms import TimeZoneField
 
-from account.models import PasswordReset
-
+from gadjo.requestprovider.signals import get_request
 
 alnum_re = re.compile(r'^\w+$')
 import logging
 
 logger = logging.getLogger(__name__)
 
-class LoginForm(forms.Form):
 
-    username = forms.CharField(label=_("Username"), max_length=30, widget=forms.TextInput())
-    password = forms.CharField(label=_("Password"), widget=forms.PasswordInput(render_value=False))
-    remember = forms.BooleanField(label=_("Remember Me"), help_text=_("If checked you will stay logged in for 3 weeks"), required=False)
+class LoginForm(forms.Form):
+    username = forms.CharField(
+        label=_("Username"), max_length=30, widget=forms.TextInput())
+    password = forms.CharField(
+        label=_("Password"), widget=forms.PasswordInput(render_value=False))
+    remember = forms.BooleanField(label=_("Remember Me"), help_text=_(
+        "If checked you will stay logged in for 3 weeks"), required=False)
 
     user = None
 
     def clean(self):
         if self._errors:
             return
-        user = authenticate(username=self.cleaned_data["username"], password=self.cleaned_data["password"])
+        user = authenticate(username=self.cleaned_data[
+                            "username"], password=self.cleaned_data["password"])
         if user:
             if user.is_active:
                 self.user = user
             else:
-                raise forms.ValidationError(_("This account is currently inactive."))
+                raise forms.ValidationError(
+                    _("This account is currently inactive."))
         else:
-            raise forms.ValidationError(_("The username and/or password you specified are not correct."))
+            raise forms.ValidationError(
+                _("The username and/or password you specified are not correct."))
         return self.cleaned_data
 
     def login(self, request):
         if self.is_valid():
             login(request, self.user)
-            request.user.message_set.create(message=ugettext(u"Successfully logged in as %(username)s.") % {'username': self.user.username})
+            messages.add_message(
+                request, messages.INFO,
+                u"Successfully logged in as %(username)s." % {'username': self.user.username})
             if self.cleaned_data['remember']:
                 request.session.set_expiry(60 * 60 * 24 * 7 * 3)
             else:
@@ -62,38 +70,50 @@ class LoginForm(forms.Form):
 
 class SignupForm(forms.Form):
 
-    username = forms.CharField(label=_("Username"), max_length=30, widget=forms.TextInput())
-    password1 = forms.CharField(label=_("Password"), widget=forms.PasswordInput(render_value=False))
-    password2 = forms.CharField(label=_("Password (again)"), widget=forms.PasswordInput(render_value=False))
+    username = forms.CharField(
+        label=_("Username"), max_length=30, widget=forms.TextInput())
+    password1 = forms.CharField(
+        label=_("Password"), widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(
+        label=_("Password (again)"), widget=forms.PasswordInput(render_value=False))
 
     if settings.ACCOUNT_REQUIRED_EMAIL or settings.ACCOUNT_EMAIL_VERIFICATION:
         email = forms.EmailField(
-            label = _("Email"),
-            required = True,
-            widget = forms.TextInput()
+            label=_("Email"),
+            required=True,
+            widget=forms.TextInput()
         )
     else:
         email = forms.EmailField(
-            label = _("Email (optional)"),
-            required = False,
-            widget = forms.TextInput()
+            label=_("Email (optional)"),
+            required=False,
+            widget=forms.TextInput()
         )
 
-    confirmation_key = forms.CharField(max_length=40, required=False, widget=forms.HiddenInput())
+    confirmation_key = forms.CharField(
+        max_length=40, required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        self.request = get_request()
+        super(SignupForm, self).__init__(*args, **kwargs)
 
     def clean_username(self):
         if not alnum_re.search(self.cleaned_data["username"]):
-            raise forms.ValidationError(_("Usernames can only contain letters, numbers and underscores."))
+            raise forms.ValidationError(
+                _("Usernames can only contain letters, numbers and underscores."))
         try:
-            user = User.objects.get(username__iexact=self.cleaned_data["username"])
+            User.objects.get(
+                username__iexact=self.cleaned_data["username"])
         except User.DoesNotExist:
             return self.cleaned_data["username"]
-        raise forms.ValidationError(_("This username is already taken. Please choose another."))
+        raise forms.ValidationError(
+            _("This username is already taken. Please choose another."))
 
     def clean(self):
         if "password1" in self.cleaned_data and "password2" in self.cleaned_data:
             if self.cleaned_data["password1"] != self.cleaned_data["password2"]:
-                raise forms.ValidationError(_("You must type the same password each time."))
+                raise forms.ValidationError(
+                    _("You must type the same password each time."))
         return self.cleaned_data
 
     def save(self):
@@ -102,9 +122,11 @@ class SignupForm(forms.Form):
         password = self.cleaned_data["password1"]
 
         if self.cleaned_data["confirmation_key"]:
-            from friends.models import JoinInvitation # @@@ temporary fix for issue 93
+            # @@@ temporary fix for issue 93
+            from friends.models import JoinInvitation
             try:
-                join_invitation = JoinInvitation.objects.get(confirmation_key = self.cleaned_data["confirmation_key"])
+                join_invitation = JoinInvitation.objects.get(
+                    confirmation_key=self.cleaned_data["confirmation_key"])
                 confirmed = True
             except JoinInvitation.DoesNotExist:
                 confirmed = False
@@ -116,43 +138,50 @@ class SignupForm(forms.Form):
         if confirmed:
             if email == join_invitation.contact.email:
                 new_user = User.objects.create_user(username, email, password)
-                join_invitation.accept(new_user) # should go before creation of EmailAddress below
-                new_user.message_set.create(message=ugettext(u"Your email address has already been verified"))
+                # should go before creation of EmailAddress below
+                join_invitation.accept(new_user)
+                messages.info(self.request,
+                    ugettext(u"Your email address has already been verified"))
                 # already verified so can just create
-                EmailAddress(user=new_user, email=email, verified=True, primary=True).save()
+                EmailAddress(
+                    user=new_user, email=email, verified=True, primary=True).save()
             else:
                 new_user = User.objects.create_user(username, "", password)
-                join_invitation.accept(new_user) # should go before creation of EmailAddress below
+                # should go before creation of EmailAddress below
+                join_invitation.accept(new_user)
                 if email:
-                    new_user.message_set.create(message=ugettext(u"Confirmation email sent to %(email)s") % {'email': email})
+                    messages.info(self.request,
+                        ugettext(u"Confirmation email sent to %(email)s") % {'email': email})
                     EmailAddress.objects.add_email(new_user, email)
         else:
             new_user = User.objects.create_user(username, "", password)
             if email:
-                new_user.message_set.create(message=ugettext(u"Confirmation email sent to %(email)s") % {'email': email})
+                messages.info(self.request,
+                    ugettext(u"Confirmation email sent to %(email)s") % {'email': email})
                 EmailAddress.objects.add_email(new_user, email)
 
         if settings.ACCOUNT_EMAIL_VERIFICATION:
             new_user.is_active = False
             new_user.save()
 
-        return username, password # required for authenticate()
+        return username, password  # required for authenticate()
 
 
 class OpenIDSignupForm(forms.Form):
-    username = forms.CharField(label="Username", max_length=30, widget=forms.TextInput())
+    username = forms.CharField(
+        label="Username", max_length=30, widget=forms.TextInput())
 
     if settings.ACCOUNT_REQUIRED_EMAIL or settings.ACCOUNT_EMAIL_VERIFICATION:
         email = forms.EmailField(
-            label = _("Email"),
-            required = True,
-            widget = forms.TextInput()
+            label=_("Email"),
+            required=True,
+            widget=forms.TextInput()
         )
     else:
         email = forms.EmailField(
-            label = _("Email (optional)"),
-            required = False,
-            widget = forms.TextInput()
+            label=_("Email (optional)"),
+            required=False,
+            widget=forms.TextInput()
         )
 
     def __init__(self, *args, **kwargs):
@@ -169,12 +198,15 @@ class OpenIDSignupForm(forms.Form):
 
     def clean_username(self):
         if not alnum_re.search(self.cleaned_data["username"]):
-            raise forms.ValidationError(u"Usernames can only contain letters, numbers and underscores.")
+            raise forms.ValidationError(
+                u"Usernames can only contain letters, numbers and underscores.")
         try:
-            user = User.objects.get(username__iexact=self.cleaned_data["username"])
+            User.objects.get(
+                username__iexact=self.cleaned_data["username"])
         except User.DoesNotExist:
             return self.cleaned_data["username"]
-        raise forms.ValidationError(u"This username is already taken. Please choose another.")
+        raise forms.ValidationError(
+            u"This username is already taken. Please choose another.")
 
 
 class UserForm(forms.Form):
@@ -196,67 +228,97 @@ class AccountForm(UserForm):
 
 class AddEmailForm(UserForm):
 
-    email = forms.EmailField(label=_("Email"), required=True, widget=forms.TextInput(attrs={'size':'30'}))
+    def __init__(self, *args, **kwargs):
+        self.request = get_request()
+        super(AddEmailForm, self).__init__(*args, **kwargs)
+
+    email = forms.EmailField(
+        label=_("Email"), required=True, widget=forms.TextInput(attrs={'size': '30'}))
 
     def clean_email(self):
         try:
-            EmailAddress.objects.get(user=self.user, email=self.cleaned_data["email"])
+            EmailAddress.objects.get(
+                user=self.user, email=self.cleaned_data["email"])
         except EmailAddress.DoesNotExist:
             return self.cleaned_data["email"]
-        raise forms.ValidationError(_("This email address already associated with this account."))
+        raise forms.ValidationError(
+            _("This email address already associated with this account."))
 
     def save(self):
-        self.user.message_set.create(message=ugettext(u"Confirmation email sent to %(email)s") % {'email': self.cleaned_data["email"]})
+        messages.info(self.request,
+            ugettext(u"Confirmation email sent to %(email)s") % {'email': self.cleaned_data["email"]})
         return EmailAddress.objects.add_email(self.user, self.cleaned_data["email"])
 
 
 class ChangePasswordForm(UserForm):
 
-    oldpassword = forms.CharField(label=_("Current Password"), widget=forms.PasswordInput(render_value=False))
-    password1 = forms.CharField(label=_("New Password"), widget=forms.PasswordInput(render_value=False))
-    password2 = forms.CharField(label=_("New Password (again)"), widget=forms.PasswordInput(render_value=False))
+    oldpassword = forms.CharField(
+        label=_("Current Password"), widget=forms.PasswordInput(render_value=False))
+    password1 = forms.CharField(
+        label=_("New Password"), widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(
+        label=_("New Password (again)"), widget=forms.PasswordInput(render_value=False))
+
+    def __init__(self, *args, **kwargs):
+        self.request = get_request()
+        super(ChangePasswordForm, self).__init__(*args, **kwargs)
 
     def clean_oldpassword(self):
         if not self.user.check_password(self.cleaned_data.get("oldpassword")):
-            raise forms.ValidationError(_("Please type your current password."))
+            raise forms.ValidationError(
+                _("Please type your current password."))
         return self.cleaned_data["oldpassword"]
 
     def clean_password2(self):
         if "password1" in self.cleaned_data and "password2" in self.cleaned_data:
             if self.cleaned_data["password1"] != self.cleaned_data["password2"]:
-                raise forms.ValidationError(_("You must type the same password each time."))
+                raise forms.ValidationError(
+                    _("You must type the same password each time."))
         return self.cleaned_data["password2"]
 
     def save(self):
         self.user.set_password(self.cleaned_data['password1'])
         self.user.save()
-        self.user.message_set.create(message=ugettext(u"Password successfully changed."))
+        messages.info(self.request, ugettext(u"Password successfully changed."))
 
 
 class SetPasswordForm(UserForm):
 
-    password1 = forms.CharField(label=_("Password"), widget=forms.PasswordInput(render_value=False))
-    password2 = forms.CharField(label=_("Password (again)"), widget=forms.PasswordInput(render_value=False))
+    password1 = forms.CharField(
+        label=_("Password"), widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(
+        label=_("Password (again)"), widget=forms.PasswordInput(render_value=False))
+
+    def __init__(self, *args, **kwargs):
+        self.request = get_request()
+        super(SetPasswordForm, self).__init__(*args, **kwargs)
 
     def clean_password2(self):
         if "password1" in self.cleaned_data and "password2" in self.cleaned_data:
             if self.cleaned_data["password1"] != self.cleaned_data["password2"]:
-                raise forms.ValidationError(_("You must type the same password each time."))
+                raise forms.ValidationError(
+                    _("You must type the same password each time."))
         return self.cleaned_data["password2"]
 
     def save(self):
         self.user.set_password(self.cleaned_data["password1"])
         self.user.save()
-        self.user.message_set.create(message=ugettext(u"Password successfully set."))
+        messages.info(self.request, ugettext(u"Password successfully set."))
 
 
 class ResetPasswordForm(forms.Form):
 
-    email = forms.EmailField(label=_("Email"), required=True, widget=forms.TextInput(attrs={'size':'30'}))
+    email = forms.EmailField(
+        label=_("Email"), required=True, widget=forms.TextInput(attrs={'size': '30'}))
+
+    def __init__(self, *args, **kwargs):
+        self.request = get_request()
+        super(ResetPasswordForm, self).__init__(*args, **kwargs)
 
     def clean_email(self):
         if EmailAddress.objects.filter(email__iexact=self.cleaned_data["email"], verified=True).count() == 0:
-            raise forms.ValidationError(_("Email address not verified for any user account"))
+            raise forms.ValidationError(
+                _("Email address not verified for any user account"))
         return self.cleaned_data["email"]
 
     def save(self):
@@ -275,7 +337,7 @@ class ResetPasswordForm(forms.Form):
             current_site = Site.objects.get_current()
             domain = unicode(current_site.domain)
 
-            #send the password reset email
+            # send the password reset email
             subject = _("Password reset email sent")
             message = render_to_string("account/password_reset_key_message.txt", {
                 "user": user,
@@ -283,15 +345,22 @@ class ResetPasswordForm(forms.Form):
                 "domain": domain,
             })
 
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], priority="high")
+            send_mail(
+                subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], priority="high")
         return self.cleaned_data["email"]
 
 
 class ResetPasswordKeyForm(forms.Form):
 
-    password1 = forms.CharField(label=_("New Password"), widget=forms.PasswordInput(render_value=False))
-    password2 = forms.CharField(label=_("New Password (again)"), widget=forms.PasswordInput(render_value=False))
+    password1 = forms.CharField(
+        label=_("New Password"), widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(
+        label=_("New Password (again)"), widget=forms.PasswordInput(render_value=False))
     temp_key = forms.CharField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        self.request = get_request()
+        super(ResetPasswordForm, self).__init__(*args, **kwargs)
 
     def clean_temp_key(self):
         temp_key = self.cleaned_data.get("temp_key")
@@ -302,7 +371,8 @@ class ResetPasswordKeyForm(forms.Form):
     def clean_password2(self):
         if "password1" in self.cleaned_data and "password2" in self.cleaned_data:
             if self.cleaned_data["password1"] != self.cleaned_data["password2"]:
-                raise forms.ValidationError(_("You must type the same password each time."))
+                raise forms.ValidationError(
+                    _("You must type the same password each time."))
         return self.cleaned_data["password2"]
 
     def save(self):
@@ -312,13 +382,14 @@ class ResetPasswordKeyForm(forms.Form):
         if len(reset_records) > 0:
             password_reset = reset_records[0]
         else:
-            raise forms.ValidationError(_("Could not find that password reset key"))
+            raise forms.ValidationError(
+                _("Could not find that password reset key"))
 
         # now set the new user password
         user = User.objects.get(passwordreset__exact=password_reset)
         user.set_password(self.cleaned_data["password1"])
         user.save()
-        user.message_set.create(message=ugettext(u"Password successfully changed."))
+        messages.info(self.request, ugettext(u"Password successfully changed."))
 
         # change all the password reset records to this person to be true.
         for password_reset in PasswordReset.objects.filter(user=user):
@@ -331,32 +402,36 @@ class ChangeTimezoneForm(AccountForm):
     timezone = TimeZoneField(label=_("Timezone"), required=True)
 
     def __init__(self, *args, **kwargs):
+        self.request = get_request()
         super(ChangeTimezoneForm, self).__init__(*args, **kwargs)
         self.initial.update({"timezone": self.account.timezone})
 
     def save(self):
         self.account.timezone = self.cleaned_data["timezone"]
         self.account.save()
-        self.user.message_set.create(message=ugettext(u"Timezone successfully updated."))
+        messages.info(self.request, ugettext(u"Timezone successfully updated."))
 
 
 class ChangeLanguageForm(AccountForm):
 
-    language = forms.ChoiceField(label=_("Language"), required=True, choices=settings.LANGUAGES)
+    language = forms.ChoiceField(
+        label=_("Language"), required=True, choices=settings.LANGUAGES)
 
     def __init__(self, *args, **kwargs):
+        self.request = get_request()
         super(ChangeLanguageForm, self).__init__(*args, **kwargs)
         self.initial.update({"language": self.account.language})
 
     def save(self):
         self.account.language = self.cleaned_data["language"]
         self.account.save()
-        self.user.message_set.create(message=ugettext(u"Language successfully updated."))
+        messages.info(self.request, ugettext(u"Language successfully updated."))
 
 
 # @@@ these should somehow be moved out of account or at least out of this module
 
 from account.models import OtherServiceInfo, other_service, update_other_services
+
 
 class TwitterForm(UserForm):
     username = forms.CharField(label=_("Username"), required=True)
@@ -364,13 +439,17 @@ class TwitterForm(UserForm):
                                widget=forms.PasswordInput(render_value=False))
 
     def __init__(self, *args, **kwargs):
+        self.request = get_request()
         super(TwitterForm, self).__init__(*args, **kwargs)
-        self.initial.update({"username": other_service(self.user, "twitter_user")})
+        self.initial.update(
+            {"username": other_service(self.user, "twitter_user")})
 
     def save(self):
         from microblogging.utils import get_twitter_password
         update_other_services(self.user,
-            twitter_user = self.cleaned_data['username'],
-            twitter_password = get_twitter_password(settings.SECRET_KEY, self.cleaned_data['password']),
+                              twitter_user=self.cleaned_data['username'],
+                              twitter_password=get_twitter_password(
+                                  settings.SECRET_KEY, self.cleaned_data[
+            'password']),
         )
-        self.user.message_set.create(message=ugettext(u"Successfully authenticated."))
+        messages.info(self.request, ugettext(u"Successfully authenticated."))

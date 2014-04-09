@@ -13,12 +13,14 @@
 #
 # You should have received a copy (See file COPYING) of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
 
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 from organizations.models import Organization, Team
@@ -26,34 +28,38 @@ from django.forms.extras.widgets import SelectDateWidget
 
 from projects.limits import org_user_limit
 
+from gadjo.requestprovider.signals import get_request
+
+
 class TeamForm(forms.ModelForm):
+
     class Meta:
         model = Team
-        fields = ('name', 'access_type' )
+        fields = ('name', 'access_type')
 
 
 class UpdateOrganizationForm(forms.ModelForm):
 
     class Meta:
         model = Organization
-        fields = ('name',  'description' )
-
+        fields = ('name',  'description')
 
 
 class OrganizationForm(forms.ModelForm):
     slug = forms.SlugField(max_length=20,
-        help_text = _("a short version of the name consisting only of letters, numbers, underscores and hyphens."),
-        error_messages={'invalid': _("This value must contain only letters, numbers, underscores and hyphens.")})
+                           help_text=_(
+                               "a short version of the name consisting only of letters, numbers, underscores and hyphens."),
+                           error_messages={'invalid': _("This value must contain only letters, numbers, underscores and hyphens.")})
 
     def clean_slug(self):
         if Organization.objects.filter(slug__iexact=self.cleaned_data["slug"]).count() > 0:
-            raise forms.ValidationError(_("A Organization already exists with that slug."))
+            raise forms.ValidationError(
+                _("A Organization already exists with that slug."))
         return self.cleaned_data["slug"].lower()
 
     class Meta:
         model = Organization
-        fields = ('name', 'slug' )
-
+        fields = ('name', 'slug')
 
 
 class AddUserForm(forms.Form):
@@ -62,24 +68,30 @@ class AddUserForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.team = kwargs.pop("team")
+        self.request = get_request()
         super(AddUserForm, self).__init__(*args, **kwargs)
 
     def clean_recipient(self):
         try:
-            user = User.objects.get(username__exact=self.cleaned_data['recipient'])
+            user = User.objects.get(
+                username__exact=self.cleaned_data['recipient'])
         except User.DoesNotExist:
-            raise forms.ValidationError(_("There is no user with this username."))
+            raise forms.ValidationError(
+                _("There is no user with this username."))
 
         if user in self.team.members.all():
-            raise forms.ValidationError(_("User is already a member of this team."))
+            raise forms.ValidationError(
+                _("User is already a member of this team."))
 
         if not org_user_limit.increaseAllowed(userToAdd=user, organization=self.team.organization):
-            raise forms.ValidationError(_("Upgrade your account to add more users."))
+            raise forms.ValidationError(
+                _("Upgrade your account to add more users."))
 
         return self.cleaned_data['recipient']
 
     def save(self, user):
-        new_member = User.objects.get(username__exact=self.cleaned_data['recipient'])
-        self.team.members.add( new_member )
+        new_member = User.objects.get(
+            username__exact=self.cleaned_data['recipient'])
+        self.team.members.add(new_member)
         self.team.save()
-        user.message_set.create(message="Added %s to team" % new_member)
+        messages.info(self.request, "Added %s to team" % new_member)

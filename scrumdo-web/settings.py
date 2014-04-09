@@ -53,8 +53,6 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-# TODO: database gegevens naar local_settings
-
 # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'ado_mssql'.
 DATABASE_ENGINE = 'postgresql_psycopg2'
 DATABASE_NAME = ''       # Or path to database file if using sqlite3.
@@ -117,8 +115,8 @@ SECRET_KEY = 'cl@#$@#!%$^!42164363246y@18*^@-!+$fu^q!sa6yh2^'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
-    'django.template.loaders.app_directories.load_template_source',
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
 )
 
 AVATAR_DEFAULT_URL = STATIC_URL + 'images/defaultAvatar.png'
@@ -128,6 +126,7 @@ AVATAR_GRAVATAR_BACKUP = True
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django_openid.consumer.SessionConsumer',
     'account.middleware.LocaleMiddleware',
@@ -147,11 +146,12 @@ TEMPLATE_DIRS = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.auth",
+    "django.contrib.auth.context_processors.auth",
     "django.core.context_processors.debug",
     "django.core.context_processors.i18n",
     "django.core.context_processors.media",
     "django.core.context_processors.request",
+    'django.contrib.messages.context_processors.messages',
     "pinax.core.context_processors.pinax_settings",
     "projects.context_processors.projects_constants",
     "announcements.context_processors.site_wide_announcements",
@@ -168,6 +168,8 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'django.contrib.markup',
     'django.contrib.admin',
+    'django.contrib.messages',
+
     'pinax.templatetags',
 
     # external

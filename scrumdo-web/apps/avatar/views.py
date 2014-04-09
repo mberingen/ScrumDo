@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.utils.translation import ugettext as _
 
 from django.db.models import get_app
@@ -22,6 +23,7 @@ if 'friends' in settings.INSTALLED_APPS:
     friends = True
     from friends.models import Friendship
 
+
 def _get_next(request):
     """
     The part that's the least straightforward about views in this module is how they
@@ -36,10 +38,12 @@ def _get_next(request):
     3. If Django can determine the previous page from the HTTP headers, the view will
     redirect to that previous page.
     """
-    next = request.POST.get('next', request.GET.get('next', request.META.get('HTTP_REFERER', None)))
+    next = request.POST.get('next', request.GET.get(
+        'next', request.META.get('HTTP_REFERER', None)))
     if not next:
         next = request.path
     return next
+
 
 def change(request, extra_context={}, next_override=None):
     avatars = Avatar.objects.filter(user=request.user).order_by('-primary')
@@ -49,47 +53,52 @@ def change(request, extra_context={}, next_override=None):
     else:
         avatar = None
         kwargs = {}
-    primary_avatar_form = PrimaryAvatarForm(request.POST or None, user=request.user, **kwargs)
+    primary_avatar_form = PrimaryAvatarForm(
+        request.POST or None, user=request.user, **kwargs)
     if request.method == "POST":
         updated = False
         if 'avatar' in request.FILES:
             path = avatar_file_path(user=request.user,
-                filename=request.FILES['avatar'].name)
+                                    filename=request.FILES['avatar'].name)
             avatar = Avatar(
-                user = request.user,
-                primary = True,
-                avatar = path,
+                user=request.user,
+                primary=True,
+                avatar=path,
             )
-            new_file = avatar.avatar.storage.save(path, request.FILES['avatar'])
+            new_file = avatar.avatar.storage.save(
+                path, request.FILES['avatar'])
             avatar.save()
             updated = True
-            request.user.message_set.create(
-                message=_("Successfully uploaded a new avatar."))
+            messages.info(request,
+                _("Successfully uploaded a new avatar."))
         if 'choice' in request.POST and primary_avatar_form.is_valid():
             avatar = Avatar.objects.get(id=
-                primary_avatar_form.cleaned_data['choice'])
+                                        primary_avatar_form.cleaned_data['choice'])
             avatar.primary = True
             avatar.save()
             updated = True
-            request.user.message_set.create(
-                message=_("Successfully updated your avatar."))
+            messages.info(request,
+                _("Successfully updated your avatar."))
         if updated and notification:
-            notification.send([request.user], "avatar_updated", {"user": request.user, "avatar": avatar})
+            notification.send([request.user], "avatar_updated", {
+                              "user": request.user, "avatar": avatar})
             if friends:
-                notification.send((x['friend'] for x in Friendship.objects.friends_for_user(request.user)), "avatar_friend_updated", {"user": request.user, "avatar": avatar})
+                notification.send((x['friend'] for x in Friendship.objects.friends_for_user(
+                    request.user)), "avatar_friend_updated", {"user": request.user, "avatar": avatar})
         return HttpResponseRedirect(next_override or _get_next(request))
     return render_to_response(
         'avatar/change.html',
         extra_context,
-        context_instance = RequestContext(
+        context_instance=RequestContext(
             request,
-            { 'avatar': avatar,
-              'avatars': avatars,
-              'primary_avatar_form': primary_avatar_form,
-              'next': next_override or _get_next(request), }
+            {'avatar': avatar,
+             'avatars': avatars,
+             'primary_avatar_form': primary_avatar_form,
+             'next': next_override or _get_next(request), }
         )
     )
 change = login_required(change)
+
 
 def delete(request, extra_context={}, next_override=None):
     avatars = Avatar.objects.filter(user=request.user).order_by('-primary')
@@ -97,7 +106,8 @@ def delete(request, extra_context={}, next_override=None):
         avatar = avatars[0]
     else:
         avatar = None
-    delete_avatar_form = DeleteAvatarForm(request.POST or None, user=request.user)
+    delete_avatar_form = DeleteAvatarForm(
+        request.POST or None, user=request.user)
     if request.method == 'POST':
         if delete_avatar_form.is_valid():
             ids = delete_avatar_form.cleaned_data['choices']
@@ -106,23 +116,25 @@ def delete(request, extra_context={}, next_override=None):
                     if unicode(a.id) not in ids:
                         a.primary = True
                         a.save()
-                        notification.send([request.user], "avatar_updated", {"user": request.user, "avatar": a})
+                        notification.send(
+                            [request.user], "avatar_updated", {"user": request.user, "avatar": a})
                         if friends:
-                            notification.send((x['friend'] for x in Friendship.objects.friends_for_user(request.user)), "avatar_friend_updated", {"user": request.user, "avatar": a})
+                            notification.send((x['friend'] for x in Friendship.objects.friends_for_user(
+                                request.user)), "avatar_friend_updated", {"user": request.user, "avatar": a})
                         break
             Avatar.objects.filter(id__in=ids).delete()
-            request.user.message_set.create(
-                message=_("Successfully deleted the requested avatars."))
+            messages.info(request,
+                _("Successfully deleted the requested avatars."))
             return HttpResponseRedirect(next_override or _get_next(request))
     return render_to_response(
         'avatar/confirm_delete.html',
         extra_context,
-        context_instance = RequestContext(
+        context_instance=RequestContext(
             request,
-            { 'avatar': avatar,
-              'avatars': avatars,
-              'delete_avatar_form': delete_avatar_form,
-              'next': next_override or _get_next(request), }
+            {'avatar': avatar,
+             'avatars': avatars,
+             'delete_avatar_form': delete_avatar_form,
+             'next': next_override or _get_next(request), }
         )
     )
 delete = login_required(delete)

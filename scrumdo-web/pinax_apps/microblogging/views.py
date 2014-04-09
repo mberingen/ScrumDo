@@ -4,6 +4,7 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.contrib import messages
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -18,7 +19,7 @@ else:
 
 
 def personal(request, form_class=TweetForm,
-        template_name="microblogging/personal.html", success_url=None):
+             template_name="microblogging/personal.html", success_url=None):
     """
     just the tweets the current user is following
     """
@@ -48,7 +49,8 @@ def personal(request, form_class=TweetForm,
         "twitter_authorized": twitter_verify_credentials(twitter_account),
     }, context_instance=RequestContext(request))
 personal = login_required(personal)
-    
+
+
 def public(request, template_name="microblogging/public.html"):
     """
     all the tweets
@@ -58,6 +60,7 @@ def public(request, template_name="microblogging/public.html"):
     return render_to_response(template_name, {
         "tweets": tweets,
     }, context_instance=RequestContext(request))
+
 
 def single(request, id, template_name="microblogging/single.html"):
     """
@@ -72,29 +75,34 @@ def single(request, id, template_name="microblogging/single.html"):
 def _follow_list(request, other_user, follow_list, template_name):
     # the only difference between followers/following views is template
     # this function captures the similarity
-    
+
     return render_to_response(template_name, {
         "other_user": other_user,
         "follow_list": follow_list,
     }, context_instance=RequestContext(request))
+
 
 def followers(request, username, template_name="microblogging/followers.html"):
     """
     a list of users following the given user.
     """
     other_user = get_object_or_404(User, username=username)
-    users_followers = Following.objects.filter(followed_object_id=other_user.id, followed_content_type=ContentType.objects.get_for_model(other_user))
+    users_followers = Following.objects.filter(
+        followed_object_id=other_user.id, followed_content_type=ContentType.objects.get_for_model(other_user))
     follow_list = [u.follower_content_object for u in users_followers]
     return _follow_list(request, other_user, follow_list, template_name)
+
 
 def following(request, username, template_name="microblogging/following.html"):
     """
     a list of users the given user is following.
     """
     other_user = get_object_or_404(User, username=username)
-    following = Following.objects.filter(follower_object_id=other_user.id, follower_content_type=ContentType.objects.get_for_model(other_user))
+    following = Following.objects.filter(
+        follower_object_id=other_user.id, follower_content_type=ContentType.objects.get_for_model(other_user))
     follow_list = [u.followed_content_object for u in following]
     return _follow_list(request, other_user, follow_list, template_name)
+
 
 def toggle_follow(request, username):
     """
@@ -108,10 +116,14 @@ def toggle_follow(request, username):
     if request.user.is_authenticated() and request.method == "POST" and not is_me:
         if request.POST["action"] == "follow":
             Following.objects.follow(request.user, other_user)
-            request.user.message_set.create(message=_("You are now following %(other_user)s") % {'other_user': other_user})
+            messages.info(request, _("You are now following %(other_user)s") %
+                          {'other_user': other_user})
             if notification:
-                notification.send([other_user], "tweet_follow", {"user": request.user})
+                notification.send(
+                    [other_user], "tweet_follow", {"user": request.user})
         elif request.POST["action"] == "unfollow":
             Following.objects.unfollow(request.user, other_user)
-            request.user.message_set.create(message=_("You have stopped following %(other_user)s") % {'other_user': other_user})
+            messages.info(
+                request, _("You have stopped following %(other_user)s") %
+                {'other_user': other_user})
     return HttpResponseRedirect(reverse("profile_detail", args=[other_user]))

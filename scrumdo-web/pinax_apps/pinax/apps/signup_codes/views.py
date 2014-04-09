@@ -4,6 +4,7 @@ from django.template import RequestContext
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
+from django.contrib import messages
 from django.utils.translation import ugettext
 
 from django.contrib.admin.views.decorators import staff_member_required
@@ -14,26 +15,26 @@ from signup_codes.forms import SignupForm, InviteUserForm
 
 
 def signup(request, form_class=SignupForm,
-        template_name="account/signup.html", success_url=None):
+           template_name="account/signup.html", success_url=None):
     if success_url is None:
         success_url = get_default_redirect(request)
-    
+
     code = request.GET.get("code")
-    
+
     if request.method == "POST":
         form = form_class(request.POST)
         if form.is_valid():
             username, password = form.save()
             user = authenticate(username=username, password=password)
-            
+
             signup_code = form.cleaned_data["signup_code"]
             signup_code.use(user)
-            
+
             auth_login(request, user)
-            request.user.message_set.create(
-                message=ugettext("Successfully logged in as %(username)s.") % {
-                'username': user.username
-            })
+            messages.info(request,
+                          ugettext("Successfully logged in as %(username)s.") % {
+                              'username': user.username
+                          })
             return HttpResponseRedirect(success_url)
     else:
         signup_code = check_signup_code(code)
@@ -56,7 +57,7 @@ def signup(request, form_class=SignupForm,
 
 @staff_member_required
 def admin_invite_user(request, form_class=InviteUserForm,
-        template_name="signup_codes/admin_invite_user.html"):
+                      template_name="signup_codes/admin_invite_user.html"):
     """
     This view, by default, works inside the Django admin.
     """
@@ -65,8 +66,9 @@ def admin_invite_user(request, form_class=InviteUserForm,
         if form.is_valid():
             email = form.cleaned_data["email"]
             form.send_signup_code()
-            request.user.message_set.create(message=ugettext("An e-mail has been sent to %(email)s.") % {"email": email})
-            form = form_class() # reset
+            messages.info(
+                request, ugettext("An e-mail has been sent to %(email)s.") % {"email": email})
+            form = form_class()  # reset
     else:
         form = form_class()
     return render_to_response(template_name, {
