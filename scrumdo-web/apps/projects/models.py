@@ -185,7 +185,7 @@ class Project(Group):
         return Organization.objects.filter(teams__members__user=user, teams__access_type__ne="read", teams__projects__project=self).count() > 0
 
     def get_default_iteration(self):
-        if self.default_iteration == None:
+        if self.default_iteration is None:
             iterations = Iteration.objects.filter(
                 project=self, default_iteration=True)
             if len(iterations) == 0:
@@ -196,7 +196,7 @@ class Project(Group):
         return self.default_iteration
 
     def get_current_iterations(self):
-        if self.current_iterations == None:
+        if self.current_iterations is None:
             today = date.today
             self.current_iterations = self.iterations.filter(
                 start_date__lte=today, end_date__gte=today)
@@ -381,7 +381,7 @@ class Epic(models.Model):
         return self.points
 
     def __unicode__(self):
-        if self.local_id == None:
+        if self.local_id is None:
             local_id = -1
         else:
             local_id = self.local_id
@@ -535,7 +535,7 @@ def tag_callback(sender, instance, **kwargs):
         except:
             pass
 
-        if tag == None:
+        if tag is None:
             tag = StoryTag(project=instance.project, name=tag_to_add)
             tag.save()
 

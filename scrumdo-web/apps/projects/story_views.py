@@ -145,7 +145,7 @@ def scrum_board(request, group_slug, story_id):
     story = get_object_or_404(Story, id=story_id)
     project = get_object_or_404(Project, slug=group_slug)
     if request.method == 'POST':
-        if request.POST.get("status", None) == None:
+        if request.POST.get("status", None) is None:
             return HttpResponse("FAILED")
         target_status = status_map[request.POST.get("status")]
         reorderStory(story, request.POST.get("before"), request.POST.get(
@@ -685,7 +685,7 @@ def _handleAddStoryInternal(form, project, request):
     iteration_id = request.POST.get("iteration", None)
     epic_id = request.POST.get("epic", None)
 
-    if iteration_id != None:
+    if iteration_id is not None:
         iteration = get_object_or_404(Iteration, id=iteration_id)
         if iteration.project != project:
             raise PermissionDenied()  # Shenanigans!
@@ -693,7 +693,7 @@ def _handleAddStoryInternal(form, project, request):
     else:
         story.iteration = project.get_default_iteration()
 
-    if epic_id != None and epic_id != "":
+    if epic_id is not None and epic_id != "":
         epic = Epic.objects.get(id=epic_id)
         if epic.project != project:
             raise PermissionDenied()  # Shenanigans!

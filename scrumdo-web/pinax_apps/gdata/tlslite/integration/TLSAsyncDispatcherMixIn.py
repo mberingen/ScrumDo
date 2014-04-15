@@ -92,13 +92,13 @@ class TLSAsyncDispatcherMixIn(AsyncStateMachine):
 
     def readable(self):
         result = self.wantsReadEvent()
-        if result != None:
+        if result is not None:
             return result
         return self.siblingClass.readable(self)
 
     def writable(self):
         result = self.wantsWriteEvent()
-        if result != None:
+        if result is not None:
             return result
         return self.siblingClass.writable(self)
 
@@ -122,7 +122,7 @@ class TLSAsyncDispatcherMixIn(AsyncStateMachine):
         self.siblingClass.handle_write(self)
 
     def recv(self, bufferSize=16384):
-        if bufferSize < 16384 or self.readBuffer == None:
+        if bufferSize < 16384 or self.readBuffer is None:
             raise AssertionError()
         returnValue = self.readBuffer
         self.readBuffer = None

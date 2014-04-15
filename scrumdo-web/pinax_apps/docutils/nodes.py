@@ -932,7 +932,7 @@ class document(Root, Structural, Element):
         for id in node['ids']:
             if self.ids.has_key(id) and self.ids[id] is not node:
                 msg = self.reporter.severe('Duplicate ID: "%s".' % id)
-                if msgnode != None:
+                if msgnode is not None:
                     msgnode += msg
         if not node['ids']:
             for name in node['names']:
@@ -1009,7 +1009,7 @@ class document(Root, Structural, Element):
                 msg = self.reporter.system_message(
                     level, 'Duplicate explicit target name: "%s".' % name,
                     backrefs=[id], base_node=node)
-                if msgnode != None:
+                if msgnode is not None:
                     msgnode += msg
                 dupname(node, name)
             else:
@@ -1027,7 +1027,7 @@ class document(Root, Structural, Element):
             msg = self.reporter.info(
                 'Duplicate implicit target name: "%s".' % name,
                 backrefs=[id], base_node=node)
-            if msgnode != None:
+            if msgnode is not None:
                 msgnode += msg
 
     def has_name(self, name):
@@ -1095,7 +1095,7 @@ class document(Root, Structural, Element):
             msg = self.reporter.error(
                   'Duplicate substitution definition name: "%s".' % name,
                   base_node=subdef)
-            if msgnode != None:
+            if msgnode is not None:
                 msgnode += msg
             oldnode = self.substitution_defs[name]
             dupname(oldnode, name)
@@ -1792,7 +1792,7 @@ def serial_escape(value):
     """Escape string values that are elements of a list, for serialization."""
     return value.replace('\\', r'\\').replace(' ', r'\ ')
 
-# 
+#
 #
 # Local Variables:
 # indent-tabs-mode: nil

@@ -79,7 +79,7 @@ def checkName(element, name):
     if element.nodeType != element.ELEMENT_NODE:
         raise SyntaxError("Missing element: '%s'" % name)
 
-    if name == None:
+    if name is None:
         return
 
     if element.tagName != name:
@@ -90,7 +90,7 @@ def getChild(element, index, name=None):
         raise SyntaxError("Wrong node type in getChild()")
 
     child = element.childNodes.item(index)
-    if child == None:
+    if child is None:
         raise SyntaxError("Missing child: '%s'" % name)
     checkName(child, name)
     return child
@@ -125,7 +125,7 @@ def getLastChild(element, index, name=None):
         raise SyntaxError("Wrong node type in getLastChild()")
 
     child = element.childNodes.item(index)
-    if child == None:
+    if child is None:
         raise SyntaxError("Missing child: '%s'" % name)
     if child != element.lastChild:
         raise SyntaxError("Too many elements under: '%s'" % element.tagName)
@@ -179,7 +179,7 @@ def checkNoMoreAttributes(element):
 
 def getText(element, regEx=""):
     textNode = element.firstChild
-    if textNode == None:
+    if textNode is None:
         raise SyntaxError("Empty element '%s'" % element.tagName)
     if textNode.nodeType != textNode.TEXT_NODE:
         raise SyntaxError("Non-text node: '%s'" % element.tagName)

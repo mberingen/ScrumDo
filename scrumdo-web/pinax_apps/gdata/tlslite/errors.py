@@ -74,7 +74,7 @@ class TLSLocalAlert(TLSAlert):
 
     def __str__(self):
         alertStr = TLSAlert._descriptionStr.get(self.description)
-        if alertStr == None:
+        if alertStr is None:
             alertStr = str(self.description)
         if self.message:
             return alertStr + ": " + self.message
@@ -98,7 +98,7 @@ class TLSRemoteAlert(TLSAlert):
 
     def __str__(self):
         alertStr = TLSAlert._descriptionStr.get(self.description)
-        if alertStr == None:
+        if alertStr is None:
             alertStr = str(self.description)
         return alertStr
 

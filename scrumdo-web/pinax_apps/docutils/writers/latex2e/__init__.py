@@ -163,7 +163,7 @@ class Writer(writers.Writer):
     config_section = 'latex2e writer'
     config_section_dependencies = ('writers',)
 
-    visitor_attributes = ("head_prefix", "head", 
+    visitor_attributes = ("head_prefix", "head",
             "body_prefix", "body", "body_suffix")
 
     output = None
@@ -177,7 +177,7 @@ class Writer(writers.Writer):
         visitor = self.translator_class(self.document)
         self.document.walkabout(visitor)
         self.output = visitor.astext()
-        # copy parts 
+        # copy parts
         for attr in self.visitor_attributes:
             setattr(self, attr, getattr(visitor, attr))
 
@@ -284,7 +284,7 @@ class Babel:
     def quote_quotes(self,text):
         t = None
         for part in text.split('"'):
-            if t == None:
+            if t is None:
                 t = part
             else:
                 t += self.next_quote() + part
@@ -366,7 +366,7 @@ class DocumentClass:
 
             Level is 1,2,3..., as level 0 is the title."""
 
-        sections = [ 'section', 'subsection', 'subsubsection', 
+        sections = [ 'section', 'subsection', 'subsubsection',
                      'paragraph', 'subparagraph' ]
         if self.document_class in ('book', 'report', 'scrreprt', 'scrbook'):
             sections.insert(0, 'chapter')
@@ -382,8 +382,8 @@ class Table:
         Maybe change to a mixin defining the visit/departs, but then
         class Table internal variables are in the Translator.
 
-        Table style might be 
-        
+        Table style might be
+
         * standard: horizontal and vertical lines
         * booktabs (requires booktabs latex package): only horizontal lines
         * nolines, borderless : no lines
@@ -568,10 +568,10 @@ class LaTeXTranslator(nodes.NodeVisitor):
     # When options are given to the documentclass, latex will pass them
     # to other packages, as done with babel.
     # Dummy settings might be taken from document settings
-    
+
     # Templates
     # ---------
-    
+
     latex_head = '\\documentclass[%s]{%s}\n'
     linking = "\\ifthenelse{\\isundefined{\\hypersetup}}{\n" \
             +"\\usepackage[colorlinks=%s,linkcolor=%s,urlcolor=%s]{hyperref}\n" \
@@ -638,7 +638,7 @@ class LaTeXTranslator(nodes.NodeVisitor):
         if self.babel.get_language():
             self.d_options += ',%s' % self.babel.get_language()
 
-        self.d_class = DocumentClass(settings.documentclass, 
+        self.d_class = DocumentClass(settings.documentclass,
                                      settings.use_part_section)
         # object for a table while proccessing.
         self.table_stack = []
@@ -727,13 +727,13 @@ class LaTeXTranslator(nodes.NodeVisitor):
         self.head_prefix.append( self.linking % (
                     self.colorlinks, self.hyperlink_color, self.hyperlink_color))
 
-        # 
+        #
         if self.settings.literal_block_env != '':
             self.settings.use_verbatim_when_possible = True
         if self.linking: # and maybe check for pdf
             self.pdfinfo = [ ]
             self.pdfauthor = None
-            # pdftitle, pdfsubject, pdfauthor, pdfkeywords, 
+            # pdftitle, pdfsubject, pdfauthor, pdfkeywords,
             # pdfcreator, pdfproducer
         else:
             self.pdfinfo = None
@@ -757,7 +757,7 @@ class LaTeXTranslator(nodes.NodeVisitor):
         self.topic_classes = []
         # column specification for tables
         self.table_caption = None
-        
+
         # Flags to encode
         # ---------------
         # verbatim: to tell encode not to encode.
@@ -777,7 +777,7 @@ class LaTeXTranslator(nodes.NodeVisitor):
         self._section_number = [0]
 
         # The current stack of enumerations so that we can expand
-        # them into a compound enumeration.  
+        # them into a compound enumeration.
         self._enumeration_counters = []
 
         # The maximum number of enumeration counters we've used.
@@ -978,7 +978,7 @@ class LaTeXTranslator(nodes.NodeVisitor):
             return '\\begin{%s}%s\n' % (env, opt)
         return '\n\\end{%s}\n' % (env, )
 
-        
+
 
     def attval(self, text,
                whitespace=re.compile('[\n\r\t\v\f]')):
@@ -1235,7 +1235,7 @@ class LaTeXTranslator(nodes.NodeVisitor):
 
     def visit_docinfo_item(self, node, name):
         if name == 'author':
-            if not self.pdfinfo == None:
+            if not self.pdfinfo is None:
                 if not self.pdfauthor:
                     self.pdfauthor = self.attval(node.astext())
                 else:
@@ -1430,7 +1430,7 @@ class LaTeXTranslator(nodes.NodeVisitor):
             self.body.append('\\newcounter{%s}\n' % counter_name)
         else:
             self.body.append('\\setcounter{%s}{0}\n' % counter_name)
-            
+
         self.body.append('\\begin{list}{%s\\%s{%s}%s}\n' % \
             (enum_prefix,enum_type,counter_name,enum_suffix))
         self.body.append('{\n')
@@ -2096,7 +2096,7 @@ class LaTeXTranslator(nodes.NodeVisitor):
             and self.settings.use_latex_abstract):
                 raise nodes.SkipNode
             else: # or section titles before the table of contents.
-                # BUG: latex chokes on center environment with 
+                # BUG: latex chokes on center environment with
                 # "perhaps a missing item", therefore we use hfill.
                 self.body.append('\\subsubsection*{~\\hfill ')
                 # the closing brace for subsection.
@@ -2114,7 +2114,7 @@ class LaTeXTranslator(nodes.NodeVisitor):
         elif self.section_level == 0:
             # document title
             self.title = self.encode(node.astext())
-            if not self.pdfinfo == None:
+            if not self.pdfinfo is None:
                 self.pdfinfo.append( 'pdftitle={%s}' % self.encode(node.astext()) )
             raise nodes.SkipNode
         else:

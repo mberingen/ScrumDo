@@ -212,7 +212,7 @@ class TLSRecordLayer:
                     else:
                         self._shutdown(True)
 
-            if max == None:
+            if max is None:
                 max = len(self._readBuffer)
 
             returnStr = self._readBuffer[:max]

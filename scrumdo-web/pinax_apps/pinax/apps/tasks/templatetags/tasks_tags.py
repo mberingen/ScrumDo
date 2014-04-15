@@ -17,7 +17,7 @@ task_contenttype = ContentType.objects.get(app_label='tasks', model='task')
 
 @register.inclusion_tag("tasks/task_item.html", takes_context=True)
 def show_task(context, task, nudge):
-    
+
     return {
         "nudge": nudge,
         "task": task,
@@ -30,7 +30,7 @@ def show_task(context, task, nudge):
 def focus_url(field, value, group=None):
     if field is None:
         field = "modified"
-    if field == "assignee" and value == None:
+    if field == "assignee" and value is None:
         value = "unassigned"
     kwargs = {"field": field, "value": value}
     if group is None:
@@ -57,17 +57,17 @@ class TasksForTagNode(template.Node):
             tag = template.Variable(self.tag).resolve(context)
         except:
             tag = self.tag
-        
+
         try:
             selection = template.Variable(self.selection).resolve(context)
         except:
             selection = Task.objects.all()
-        
+
         try:
             tasks = selection.filter(id__in=[i[0] for i in TaggedItem.objects.filter(tag__name=str(tag),content_type=task_contenttype).values_list('object_id')])
         except:
             return ''
-        
+
         context[self.var_name] = tasks
         return ''
 
@@ -97,4 +97,3 @@ def tasks_for_tag(parser, token):
 def simple_linebreak(text):
     # TODO: replace with better tooltip feature or detail page
     return '<br />'.join(text.splitlines())
-    

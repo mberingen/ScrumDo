@@ -67,7 +67,7 @@ def import_job(app_name, name, when=None):
         job = job_mod.Job
     except:
         raise JobError("Job module %s does not contain class instance named 'Job'" % jobmodule)
-    if when and not (job.when == when or job.when == None):
+    if when and not (job.when == when or job.when is None):
         raise JobError("Job %s is not a %s job." % (jobmodule, when))
     return job
 
@@ -101,7 +101,7 @@ def get_jobs(when=None, only_scheduled=False):
                             if (app_name, name) in _jobs:
                                 raise JobError("Duplicate job %s" % name)
                             job = import_job(app_name, name, subdir)
-                            if only_scheduled and job.when == None:
+                            if only_scheduled and job.when is None:
                                 # only include jobs which are scheduled
                                 continue
                             if when and job.when != when:

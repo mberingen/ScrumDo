@@ -542,7 +542,7 @@ class TLSConnection(TLSRecordLayer):
                     yield result
             srpParams = srpCallback()
             #If the callback returns None, cancel the handshake
-            if srpParams == None:
+            if srpParams is None:
                 for result in self._sendError(AlertDescription.user_canceled):
                     yield result
 
@@ -1071,7 +1071,7 @@ class TLSConnection(TLSRecordLayer):
                 pass
             if isinstance(certChain, X509CertChain):
                 certificateType = CertificateType.x509
-            if certificateType == None:
+            if certificateType is None:
                 raise ValueError("Unrecognized certificate type")
 
         #Initialize locals

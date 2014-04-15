@@ -30,8 +30,8 @@ class JSONrpcError (Exception):
 # by a JSONRPC call
 class JSONrpcErrorCode(JSONrpcError):
     "Exception class called when an ErrorCode is returned in XML response for access credentials"
-    pass    
-    
+    pass
+
 class WebServiceCallError(Exception):
     "Exception class for web service related errors"
     def __init__(self, arg = None):
@@ -121,7 +121,7 @@ class SigCalcError(SigValidationError):
 
 class YBrowserAuth:
     "Yahoo! Browser-Based Authentication for Python"
-    
+
     WSLOGIN_PREFIX = 'https://api.login.yahoo.com/WSLogin/V1/'
     JSON_RPC_ENDPOINT = 'http://mail.yahooapis.com/ws/mail/v1.1/jsonrpc'
 
@@ -141,7 +141,7 @@ class YBrowserAuth:
     def createAuthURL(self, aurl):
         """
         Private utility method for creating an authenticated URL
-    
+
         Arguments:
             - aurl, a URL needing authentication data
         Return:
@@ -158,12 +158,12 @@ class YBrowserAuth:
             relative_uri = relative_uri + '?' + parts[4] + '&ts=' + tstamp
         self.sig = md5.new(relative_uri + self.secret).hexdigest()
         signed_url = parts[0] +  '://' + parts[1] + relative_uri + '&sig=' + self.sig
-        return signed_url        
-        
+        return signed_url
+
     def getAuthURL(self, appd=None, uhash=1):
         """
         Creates the intial authenticated URL used for Browser-Based auth
-        
+
         Arguments:
             - appd (optional), any data string you want saved and sent back from Yahoo! upon
                     successful user authentication
@@ -172,23 +172,23 @@ class YBrowserAuth:
         Return:
             - a string that is a URL with auth data appended
         """
-        if appd != "" and appd != None:
+        if appd != "" and appd is not None:
             appdata = '&' + urlencode({'appdata':appd})
         else:
             appdata = ''
-        if uhash != "" and uhash != None:
+        if uhash != "" and uhash is not None:
             hashdata = '&send_userhash=1'
         else:
             hashdata = ''
         return self.createAuthURL(YBrowserAuth.WSLOGIN_PREFIX + 'wslogin?appid=' + self.appid + appdata + hashdata)
-    
+
     def getAccessURL(self):
         """
         Creates URL used to retrieve Web Service access credentials from Yahoo!
-        
+
         Arguments:
            NONE
-           
+
         Return:
             - a string that is a URL with auth data appended
         """
@@ -197,14 +197,14 @@ class YBrowserAuth:
     def getAccessCredentials(self):
         """
         Private function used to retrieve web service access credentials
-        
+
         Arguments:
             NONE
         Return:
             NONE
         """
         url = self.getAccessURL()
-        
+
         try:
             xml = urllib2.urlopen(url).read()
         except urllib2.HTTPError, e:
@@ -215,25 +215,25 @@ class YBrowserAuth:
             raise WSunknownError("Unknown error on credentials web service call. Url = " + url)
 
         xmlsrch = re.search('<ErrorCode>(.+)</ErrorCode>', xml)
-        
-        if xmlsrch != None:
+
+        if xmlsrch is not None:
             raise WSxmlErrorCode(xml)
-        
+
         xmlsrch = re.search('(Y=.*)', xml)
-        
-        if xmlsrch == None:
+
+        if xmlsrch is None:
             raise MissingCookie(xml)
         self.cookie = xmlsrch.group(1)
 
         xmlsrch = re.search('<WSSID>(.+)</WSSID>', xml)
-        
-        if xmlsrch == None:
+
+        if xmlsrch is None:
             raise MissingWSSID(xml)
         self.WSSID = xmlsrch.group(1)
 
         xmlsrch = re.search('<Timeout>(.+)</Timeout>', xml)
-        
-        if xmlsrch == None:
+
+        if xmlsrch is None:
             raise MissingTimeout(xml)
         self.timeout = xmlsrch.group(1)
 
@@ -242,7 +242,7 @@ class YBrowserAuth:
     def createAuthWSurl(self, wurl):
         """
         Build a URL specifically for making authenticated web service calls
-        
+
         Arguments:
             - wurl the web service call URL
         Return:
@@ -250,7 +250,7 @@ class YBrowserAuth:
         """
         if self.cookie == '':
                 self.getAccessCredentials()
-                
+
         wurl = wurl.strip()
         if not('?' in wurl):
             wurl = wurl + '?'
@@ -260,11 +260,11 @@ class YBrowserAuth:
     def validate_sig(self, tstamp, ysig, relative_url):
         """
         Validates the signature returned by a Yahoo! login
-        
+
         Arguments:
             - tstamp the timestamp sent by Yahoo!
             - ysig the signature sent by Yahoo!
-            - relative_url the REQUEST_URI 
+            - relative_url the REQUEST_URI
         Return:
             NONE
         """
@@ -275,7 +275,7 @@ class YBrowserAuth:
 
         sig_search = re.search('^(.+)&sig=(\w{32})$', relative_url)
 
-        if sig_search != None:
+        if sig_search is not None:
             relative_url_without_sig = sig_search.group(1)
             try:
                 passed_sig = sig_search.group(2)
@@ -297,18 +297,18 @@ class YBrowserAuth:
             raise SigCalcError("calculated_sig was: " + calculated_sig + ", supplied sig was: " + self.sig + ", sig input was: " + sig_input)
 
         return
-    
+
     def makeAuthWSgetCall(self, url):
         """
         Make an authenticated web service call
-        
+
         Arguments:
             - url the non-authenticated REST call you want to make
         Return:
             - string, the XML/JSON/PHP response from the web service request
         """
         url = self.createAuthWSurl(url)
-        
+
         request = urllib2.Request(url)
         request.add_header('Cookie', self.cookie)
 
@@ -319,14 +319,14 @@ class YBrowserAuth:
         except urllib2.URLError, e:
             raise WSurlError("Network error: %s" % e.reason.args[1])
         except:
-            raise WSunknownError("Unknown error on auth web service call. Url = " + url)            
-        
+            raise WSunknownError("Unknown error on auth web service call. Url = " + url)
+
         return xml
 
     def makeJSONRPCcall(self, method, params):
         """
         Make an authenticated web service call
-        
+
         Arguments:
             - method a string that is the Mail API method name you wish to invoke
             - params a Pythond dict object that is the JSON parameters for the method
@@ -334,11 +334,11 @@ class YBrowserAuth:
             - Python dict object, the decoded JSON response from the web service request
         """
         self.getAccessCredentials()
-        
+
         thecall = {}
         thecall["method"] = method
         thecall["params"] = params
-        
+
         data = simplejson.dumps(thecall)
 
         request = urllib2.Request(YBrowserAuth.JSON_RPC_ENDPOINT + '?appid=' + self.appid + '&WSSID=' + self.WSSID, data)
@@ -352,8 +352,8 @@ class YBrowserAuth:
         except urllib2.URLError, e:
             raise WSurlError("Network error: %s" % e.reason.args[1])
         except:
-            raise WSunknownError("Unknown error on auth web service call. Url = " + YBrowserAuth.JSON_RPC_ENDPOINT)            
+            raise WSunknownError("Unknown error on auth web service call. Url = " + YBrowserAuth.JSON_RPC_ENDPOINT)
 
         python_obj = simplejson.loads(json)
 
-        return python_obj    
+        return python_obj

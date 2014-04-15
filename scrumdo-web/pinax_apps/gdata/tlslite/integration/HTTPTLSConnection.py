@@ -13,7 +13,7 @@ class HTTPBaseTLSConnection(httplib.HTTPConnection):
     default_port = 443
 
     def __init__(self, host, port=None, strict=None):
-        if strict == None:
+        if strict is None:
             #Python 2.2 doesn't support strict
             httplib.HTTPConnection.__init__(self, host, port)
         else:

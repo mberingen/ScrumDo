@@ -203,7 +203,7 @@ def handle_organization_create(form, request, projects):
         # 37276784.1312040997.1.1.utmgclid=CPCFncq1qaoCFYne4AodhCvMWw|utmccn=(not%20set)|utmcmd=(not%20set)|utmctr=scrum
 
         cookie = request.COOKIES.get("__utmz")
-        if re.search("utmgclid", cookie) == None:
+        if re.search("utmgclid", cookie) is None:
             # Referrer based source
             source = re.search("utmcsr=([^|]+)", cookie).group(1)
             mode = re.search("utmcmd=([^|]+)", cookie).group(1)

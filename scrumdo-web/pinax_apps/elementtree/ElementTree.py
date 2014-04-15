@@ -84,7 +84,7 @@ __all__ = [
     "TreeBuilder",
     "VERSION", "XML",
     "XMLTreeBuilder",
-    ]
+]
 
 # parser api override (None = use default)
 parser_api = None
@@ -94,7 +94,7 @@ parser_api = None
 
 VERSION = "1.2.7"
 
-##
+#
 # The <b>Element</b> type is a flexible container object, designed to
 # store hierarchical data structures in memory. The type can be
 # described as a cross between a list and a dictionary.
@@ -110,41 +110,50 @@ VERSION = "1.2.7"
 # </ul>
 #
 # To create an element instance, use the {@link #Element} or {@link
-# #SubElement} factory functions.
+# SubElement} factory functions.
 # <p>
 # The {@link #ElementTree} class can be used to wrap an element
 # structure, and convert it from and to XML.
-##
+#
 
-import sys, re
+import sys
+import re
 
 try:
     import string
 except:
     # emulate string module under IronPython
     class string(object):
+
         def join(self, seq, sep):
             return sep.join(seq)
+
         def replace(self, text, *args):
             return text.replace(*args)
+
         def split(self, text, *args):
             return text.split(*args)
+
         def strip(self, text, *args):
             return text.strip(*args)
     string = string()
 
+
 class _SimpleElementPath:
     # emulate pre-1.2 find/findtext/findall behaviour
+
     def find(self, element, tag):
         for elem in element:
             if elem.tag == tag:
                 return elem
         return None
+
     def findtext(self, element, tag, default=None):
         for elem in element:
             if elem.tag == tag:
                 return elem.text or ""
         return default
+
     def findall(self, element, tag):
         if tag[:3] == ".//":
             return element.getiterator(tag[3:])
@@ -159,6 +168,7 @@ try:
 except ImportError:
     # FIXME: issue warning in this case?
     ElementPath = _SimpleElementPath()
+
 
 class DefaultParserAPI:
 
@@ -184,7 +194,7 @@ class DefaultParserAPI:
 
 parser_api = default_parser_api = DefaultParserAPI()
 
-##
+#
 # Internal element class.  This class defines the Element interface,
 # and provides a reference implementation of this interface.
 # <p>
@@ -197,15 +207,16 @@ parser_api = default_parser_api = DefaultParserAPI()
 # @see Comment
 # @see ProcessingInstruction
 
+
 class _ElementInterface:
     # <tag attrib>text<child/>...</tag>tail
 
-    ##
+    #
     # (Attribute) Element tag.
 
     tag = None
 
-    ##
+    #
     # (Attribute) Element attribute dictionary.  Where possible, use
     # {@link #_ElementInterface.get},
     # {@link #_ElementInterface.set},
@@ -215,18 +226,18 @@ class _ElementInterface:
 
     attrib = None
 
-    ##
+    #
     # (Attribute) Text before first subelement.  This is either a
     # string or the value None, if there was no text.
 
     text = None
 
-    ##
+    #
     # (Attribute) Text after this element's end tag, but before the
     # next sibling element's start tag.  This is either a string or
     # the value None, if there was no text.
 
-    tail = None # text after end tag, if any
+    tail = None  # text after end tag, if any
 
     def __init__(self, tag, attrib):
         self.tag = tag
@@ -236,7 +247,7 @@ class _ElementInterface:
     def __repr__(self):
         return "<Element %s at %x>" % (self.tag, id(self))
 
-    ##
+    #
     # Creates a new element object of the same type as this element.
     #
     # @param tag Element tag.
@@ -246,7 +257,7 @@ class _ElementInterface:
     def makeelement(self, tag, attrib):
         return Element(tag, attrib)
 
-    ##
+    #
     # Returns the number of subelements.
     #
     # @return The number of subelements.
@@ -254,7 +265,7 @@ class _ElementInterface:
     def __len__(self):
         return len(self._children)
 
-    ##
+    #
     # Returns the given subelement.
     #
     # @param index What subelement to return.
@@ -264,7 +275,7 @@ class _ElementInterface:
     def __getitem__(self, index):
         return self._children[index]
 
-    ##
+    #
     # Replaces the given subelement.
     #
     # @param index What subelement to replace.
@@ -276,7 +287,7 @@ class _ElementInterface:
         assert iselement(element)
         self._children[index] = element
 
-    ##
+    #
     # Deletes the given subelement.
     #
     # @param index What subelement to delete.
@@ -285,7 +296,7 @@ class _ElementInterface:
     def __delitem__(self, index):
         del self._children[index]
 
-    ##
+    #
     # Returns a list containing subelements in the given range.
     #
     # @param start The first subelement to return.
@@ -295,7 +306,7 @@ class _ElementInterface:
     def __getslice__(self, start, stop):
         return self._children[start:stop]
 
-    ##
+    #
     # Replaces a number of subelements with elements from a sequence.
     #
     # @param start The first subelement to replace.
@@ -308,7 +319,7 @@ class _ElementInterface:
             assert iselement(element)
         self._children[start:stop] = list(elements)
 
-    ##
+    #
     # Deletes a number of subelements.
     #
     # @param start The first subelement to delete.
@@ -317,7 +328,7 @@ class _ElementInterface:
     def __delslice__(self, start, stop):
         del self._children[start:stop]
 
-    ##
+    #
     # Adds a subelement to the end of this element.
     #
     # @param element The element to add.
@@ -327,7 +338,7 @@ class _ElementInterface:
         assert iselement(element)
         self._children.append(element)
 
-    ##
+    #
     # Inserts a subelement at the given position in this element.
     #
     # @param index Where to insert the new subelement.
@@ -337,7 +348,7 @@ class _ElementInterface:
         assert iselement(element)
         self._children.insert(index, element)
 
-    ##
+    #
     # Removes a matching subelement.  Unlike the <b>find</b> methods,
     # this method compares elements based on identity, not on tag
     # value or contents.
@@ -350,7 +361,7 @@ class _ElementInterface:
         assert iselement(element)
         self._children.remove(element)
 
-    ##
+    #
     # Returns all subelements.  The elements are returned in document
     # order.
     #
@@ -360,7 +371,7 @@ class _ElementInterface:
     def getchildren(self):
         return self._children
 
-    ##
+    #
     # Finds the first matching subelement, by tag name or path.
     #
     # @param path What element to look for.
@@ -370,7 +381,7 @@ class _ElementInterface:
     def find(self, path):
         return ElementPath.find(self, path)
 
-    ##
+    #
     # Finds text for the first matching subelement, by tag name or path.
     #
     # @param path What element to look for.
@@ -384,7 +395,7 @@ class _ElementInterface:
     def findtext(self, path, default=None):
         return ElementPath.findtext(self, path, default)
 
-    ##
+    #
     # Finds all matching subelements, by tag name or path.
     #
     # @param path What element to look for.
@@ -395,7 +406,7 @@ class _ElementInterface:
     def findall(self, path):
         return ElementPath.findall(self, path)
 
-    ##
+    #
     # Resets an element.  This function removes all subelements, clears
     # all attributes, and sets the text and tail attributes to None.
 
@@ -404,7 +415,7 @@ class _ElementInterface:
         self._children = []
         self.text = self.tail = None
 
-    ##
+    #
     # Gets an element attribute.
     #
     # @param key What attribute to look for.
@@ -416,7 +427,7 @@ class _ElementInterface:
     def get(self, key, default=None):
         return self.attrib.get(key, default)
 
-    ##
+    #
     # Sets an element attribute.
     #
     # @param key What attribute to set.
@@ -425,7 +436,7 @@ class _ElementInterface:
     def set(self, key, value):
         self.attrib[key] = value
 
-    ##
+    #
     # Gets a list of attribute names.  The names are returned in an
     # arbitrary order (just like for an ordinary Python dictionary).
     #
@@ -435,7 +446,7 @@ class _ElementInterface:
     def keys(self):
         return self.attrib.keys()
 
-    ##
+    #
     # Gets element attributes, as a sequence.  The attributes are
     # returned in an arbitrary order.
     #
@@ -445,7 +456,7 @@ class _ElementInterface:
     def items(self):
         return self.attrib.items()
 
-    ##
+    #
     # Creates a tree iterator.  The iterator loops over this element
     # and all subelements, in document order, and returns all elements
     # with a matching tag.
@@ -470,7 +481,7 @@ class _ElementInterface:
 # compatibility
 _Element = _ElementInterface
 
-##
+#
 # Element factory.  This function returns an object implementing the
 # standard Element interface.  The exact class or type of that object
 # is implementation dependent, but it will always be compatible with
@@ -485,12 +496,13 @@ _Element = _ElementInterface
 # @return An element instance.
 # @defreturn Element
 
+
 def Element(tag, attrib={}, **extra):
     attrib = attrib.copy()
     attrib.update(extra)
     return _ElementInterface(tag, attrib)
 
-##
+#
 # Subelement factory.  This function creates an element instance, and
 # appends it to an existing element.
 # <p>
@@ -504,6 +516,7 @@ def Element(tag, attrib={}, **extra):
 # @return An element instance.
 # @defreturn Element
 
+
 def SubElement(parent, tag, attrib={}, **extra):
     attrib = attrib.copy()
     attrib.update(extra)
@@ -511,7 +524,7 @@ def SubElement(parent, tag, attrib={}, **extra):
     parent.append(element)
     return element
 
-##
+#
 # Comment element factory.  This factory function creates a special
 # element that will be serialized as an XML comment.
 # <p>
@@ -522,12 +535,13 @@ def SubElement(parent, tag, attrib={}, **extra):
 # @return An element instance, representing a comment.
 # @defreturn Element
 
+
 def Comment(text=None):
     element = Element(Comment)
     element.text = text
     return element
 
-##
+#
 # PI element factory.  This factory function creates a special element
 # that will be serialized as an XML processing instruction.
 #
@@ -535,6 +549,7 @@ def Comment(text=None):
 # @param text A string containing the PI contents, if any.
 # @return An element instance, representing a PI.
 # @defreturn Element
+
 
 def ProcessingInstruction(target, text=None):
     element = Element(ProcessingInstruction)
@@ -545,7 +560,7 @@ def ProcessingInstruction(target, text=None):
 
 PI = ProcessingInstruction
 
-##
+#
 # QName wrapper.  This can be used to wrap a QName attribute value, in
 # order to get proper namespace handling on output.
 #
@@ -555,21 +570,26 @@ PI = ProcessingInstruction
 #     an URI, and this argument is interpreted as a local name.
 # @return An opaque object, representing the QName.
 
+
 class QName:
+
     def __init__(self, text_or_uri, tag=None):
         if tag:
             text_or_uri = "{%s}%s" % (text_or_uri, tag)
         self.text = text_or_uri
+
     def __str__(self):
         return self.text
+
     def __hash__(self):
         return hash(self.text)
+
     def __cmp__(self, other):
         if isinstance(other, QName):
             return cmp(self.text, other.text)
         return cmp(self.text, other)
 
-##
+#
 # ElementTree wrapper class.  This class represents an entire element
 # hierarchy, and adds some extra support for serialization to and from
 # standard XML.
@@ -578,15 +598,16 @@ class QName:
 # @keyparam file Optional file handle or name.  If given, the
 #     tree is initialized with the contents of this XML file.
 
+
 class ElementTree:
 
     def __init__(self, element=None, file=None):
         assert element is None or iselement(element)
-        self._root = element # first node
+        self._root = element  # first node
         if file:
             self.parse(file)
 
-    ##
+    #
     # Gets the root element for this tree.
     #
     # @return An element instance.
@@ -595,7 +616,7 @@ class ElementTree:
     def getroot(self):
         return self._root
 
-    ##
+    #
     # Replaces the root element for this tree.  This discards the
     # current contents of the tree, and replaces it with the given
     # element.  Use with care.
@@ -606,7 +627,7 @@ class ElementTree:
         assert iselement(element)
         self._root = element
 
-    ##
+    #
     # Loads an external XML document into this element tree.
     #
     # @param source A file name or file object.
@@ -623,7 +644,7 @@ class ElementTree:
         self._root = tree
         return tree
 
-    ##
+    #
     # Creates a tree iterator for the root element.  The iterator loops
     # over all elements in this tree, in document order.
     #
@@ -635,7 +656,7 @@ class ElementTree:
         assert self._root is not None
         return self._root.getiterator(tag)
 
-    ##
+    #
     # Finds the first toplevel element with given tag.
     # Same as getroot().find(path).
     #
@@ -649,7 +670,7 @@ class ElementTree:
             path = "." + path
         return self._root.find(path)
 
-    ##
+    #
     # Finds the element text for the first toplevel element with given
     # tag.  Same as getroot().findtext(path).
     #
@@ -667,7 +688,7 @@ class ElementTree:
             path = "." + path
         return self._root.findtext(path, default)
 
-    ##
+    #
     # Finds all toplevel elements with the given tag.
     # Same as getroot().findall(path).
     #
@@ -682,7 +703,7 @@ class ElementTree:
             path = "." + path
         return self._root.findall(path)
 
-    ##
+    #
     # Writes the element tree to a file, as XML.
     #
     # @param file A file name, or a file object opened for writing.
@@ -707,27 +728,30 @@ class ElementTree:
             file.write("<?%s?>" % _escape_cdata(node.text, encoding))
         else:
             items = node.items()
-            xmlns_items = [] # new namespaces in this scope
+            xmlns_items = []  # new namespaces in this scope
             try:
                 if isinstance(tag, QName) or tag[:1] == "{":
                     tag, xmlns = fixtag(tag, namespaces)
-                    if xmlns: xmlns_items.append(xmlns)
+                    if xmlns:
+                        xmlns_items.append(xmlns)
             except TypeError:
                 _raise_serialization_error(tag)
             file.write("<" + _encode(tag, encoding))
             if items or xmlns_items:
-                items.sort() # lexical order
+                items.sort()  # lexical order
                 for k, v in items:
                     try:
                         if isinstance(k, QName) or k[:1] == "{":
                             k, xmlns = fixtag(k, namespaces)
-                            if xmlns: xmlns_items.append(xmlns)
+                            if xmlns:
+                                xmlns_items.append(xmlns)
                     except TypeError:
                         _raise_serialization_error(k)
                     try:
                         if isinstance(v, QName):
                             v, xmlns = fixtag(v, namespaces)
-                            if xmlns: xmlns_items.append(xmlns)
+                            if xmlns:
+                                xmlns_items.append(xmlns)
                     except TypeError:
                         _raise_serialization_error(v)
                     file.write(" %s=\"%s\"" % (_encode(k, encoding),
@@ -752,19 +776,20 @@ class ElementTree:
 # --------------------------------------------------------------------
 # helpers
 
-##
+#
 # Checks if an object appears to be a valid element object.
 #
 # @param An element instance.
 # @return A true value if this is an element object.
 # @defreturn flag
 
+
 def iselement(element):
     # FIXME: not sure about this; might be a better idea to look
     # for tag/attrib/text attributes
     return isinstance(element, _ElementInterface) or hasattr(element, "tag")
 
-##
+#
 # Writes an element tree or element structure to sys.stdout.  This
 # function should be used for debugging only.
 # <p>
@@ -772,6 +797,7 @@ def iselement(element):
 # version, it's written as an ordinary XML file.
 #
 # @param elem An element tree or an individual element.
+
 
 def dump(elem):
     # debugging
@@ -782,14 +808,15 @@ def dump(elem):
     if not tail or tail[-1] != "\n":
         sys.stdout.write("\n")
 
+
 def _encode(s, encoding):
     try:
         return s.encode(encoding)
     except AttributeError:
-        return s # 1.5.2: assume the string uses the right encoding
+        return s  # 1.5.2: assume the string uses the right encoding
 
 if sys.version[:3] == "1.5":
-    _escape = re.compile(r"[&<>\"\x80-\xff]+") # 1.5.2
+    _escape = re.compile(r"[&<>\"\x80-\xff]+")  # 1.5.2
 else:
     _escape = re.compile(eval(r'u"[&<>\"\u0080-\uffff]+"'))
 
@@ -808,10 +835,12 @@ _namespace_map = {
     "http://schemas.xmlsoap.org/wsdl/": "wsdl",
 }
 
+
 def _raise_serialization_error(text):
     raise TypeError(
         "cannot serialize %r (type %s)" % (text, type(text).__name__)
-        )
+    )
+
 
 def _encode_entity(text, pattern=_escape):
     # map reserved and non-ascii characters to numerical entities
@@ -833,6 +862,7 @@ def _encode_entity(text, pattern=_escape):
 # the following functions assume an ascii-compatible encoding
 # (or "utf-16")
 
+
 def _escape_cdata(text, encoding=None, replace=string.replace):
     # escape character data
     try:
@@ -850,6 +880,7 @@ def _escape_cdata(text, encoding=None, replace=string.replace):
         return text
     except (TypeError, AttributeError):
         _raise_serialization_error(text)
+
 
 def _escape_attrib(text, encoding=None, replace=string.replace):
     # escape attribute value
@@ -873,6 +904,7 @@ def _escape_attrib(text, encoding=None, replace=string.replace):
     except (TypeError, AttributeError):
         _raise_serialization_error(text)
 
+
 def fixtag(tag, namespaces):
     # given a decorated tag (of the form {uri}tag), return prefixed
     # tag and namespace declaration, if any
@@ -893,13 +925,14 @@ def fixtag(tag, namespaces):
         xmlns = None
     return "%s:%s" % (prefix, tag), xmlns
 
-##
+#
 # Parses an XML document into an element tree.
 #
 # @param source A filename or file object containing XML data.
 # @param parser An optional parser instance.  If not given, the
 #     standard {@link XMLTreeBuilder} parser is used.
 # @return An ElementTree instance
+
 
 def parse(source, parser=None):
     if parser:
@@ -908,7 +941,7 @@ def parse(source, parser=None):
         tree = parser_api.parse(source)
     return ElementTree(tree)
 
-##
+#
 # Parses an XML document into an element tree incrementally, and reports
 # what's going on to the user.
 #
@@ -917,8 +950,10 @@ def parse(source, parser=None):
 #     events are reported.
 # @return A (event, elem) iterator.
 
+
 def iterparse(source, events=None):
     return parser_api.iterparse(source, events)
+
 
 class _iterparse:
 
@@ -940,6 +975,7 @@ class _iterparse:
                 try:
                     parser.ordered_attributes = 1
                     parser.specified_attributes = 1
+
                     def handler(tag, attrib_in, event=event, append=append,
                                 start=self._parser._start_list):
                         append((event, start(tag, attrib_in)))
@@ -993,13 +1029,14 @@ class _iterparse:
 
     try:
         iter
+
         def __iter__(self):
             return self
     except NameError:
         def __getitem__(self, index):
             return self.next()
 
-##
+#
 # Parses an XML document from a string constant.  This function can
 # be used to embed "XML literals" in Python code.
 #
@@ -1007,17 +1044,19 @@ class _iterparse:
 # @return An Element instance.
 # @defreturn Element
 
+
 def XML(text):
     api = parser_api or default_parser_api
     return api.fromstring(text)
 
-##
+#
 # Parses an XML document from a string constant, and also returns
 # a dictionary which maps from element id:s to elements.
 #
 # @param source A string containing XML data.
 # @return A tuple containing an Element instance and a dictionary.
 # @defreturn (Element, dictionary)
+
 
 def XMLID(text):
     api = parser_api or default_parser_api
@@ -1029,7 +1068,7 @@ def XMLID(text):
             ids[id] = elem
     return tree, ids
 
-##
+#
 # Parses an XML document from a string constant.  Same as {@link #XML}.
 #
 # @def fromstring(text)
@@ -1039,13 +1078,14 @@ def XMLID(text):
 
 fromstring = XML
 
-##
+#
 # Generates a string representation of an XML element, including all
 # subelements.
 #
 # @param element An Element instance.
 # @return An encoded string containing the XML data.
 # @defreturn string
+
 
 def tostring(element, encoding=None):
     class dummy:
@@ -1056,10 +1096,10 @@ def tostring(element, encoding=None):
     ElementTree(element).write(file, encoding)
     return string.join(data, "")
 
-##
+#
 # Generic element structure builder.  This builder converts a sequence
 # of {@link #TreeBuilder.start}, {@link #TreeBuilder.data}, and {@link
-# #TreeBuilder.end} method calls to a well-formed element structure.
+# TreeBuilder.end} method calls to a well-formed element structure.
 # <p>
 # You can use this class to build an element structure using a custom XML
 # parser, or a parser for some other XML-like format.
@@ -1067,18 +1107,19 @@ def tostring(element, encoding=None):
 # @param element_factory Optional element factory.  This factory
 #    is called to create new Element instances, as necessary.
 
+
 class TreeBuilder:
 
     def __init__(self, element_factory=None):
-        self._data = [] # data collector
-        self._elem = [] # element stack
-        self._last = None # last element
-        self._tail = None # true if we're after an end tag
+        self._data = []  # data collector
+        self._elem = []  # element stack
+        self._last = None  # last element
+        self._tail = None  # true if we're after an end tag
         if element_factory is None:
             element_factory = _ElementInterface
         self._factory = element_factory
 
-    ##
+    #
     # Flushes the parser buffers, and returns the toplevel documen
     # element.
     #
@@ -1087,7 +1128,7 @@ class TreeBuilder:
 
     def close(self):
         assert len(self._elem) == 0, "missing end tags"
-        assert self._last != None, "missing toplevel element"
+        assert self._last is not None, "missing toplevel element"
         return self._last
 
     def _flush(self):
@@ -1102,7 +1143,7 @@ class TreeBuilder:
                     self._last.text = text
             self._data = []
 
-    ##
+    #
     # Adds text to the current element.
     #
     # @param data A string.  This should be either an 8-bit string
@@ -1111,7 +1152,7 @@ class TreeBuilder:
     def data(self, data):
         self._data.append(data)
 
-    ##
+    #
     # Opens a new element.
     #
     # @param tag The element name.
@@ -1128,7 +1169,7 @@ class TreeBuilder:
         self._tail = 0
         return elem
 
-    ##
+    #
     # Closes the current element.
     #
     # @param tag The element name.
@@ -1139,21 +1180,22 @@ class TreeBuilder:
         self._flush()
         self._last = self._elem.pop()
         assert self._last.tag == tag,\
-               "end tag mismatch (expected %s, got %s)" % (
-                   self._last.tag, tag)
+            "end tag mismatch (expected %s, got %s)" % (
+                self._last.tag, tag)
         self._tail = 1
         return self._last
 
-##
+#
 # Element structure builder for XML source data, based on the
 # <b>expat</b> parser.
 #
 # @keyparam target Target object.  If omitted, the builder uses an
-#     instance of the standard {@link #TreeBuilder} class.
+# instance of the standard {@link #TreeBuilder} class.
 # @keyparam html Predefine HTML entities.  This flag is not supported
 #     by the current implementation.
 # @see #ElementTree
 # @see #TreeBuilder
+
 
 class XMLTreeBuilder:
 
@@ -1163,12 +1205,12 @@ class XMLTreeBuilder:
         except ImportError:
             raise ImportError(
                 "No module named expat; use SimpleXMLTreeBuilder instead"
-                )
+            )
         self._parser = parser = expat.ParserCreate(None, "}")
         if target is None:
             target = TreeBuilder()
         self._target = target
-        self._names = {} # name memo cache
+        self._names = {}  # name memo cache
         # callbacks
         parser.DefaultHandlerExpand = self._default
         parser.StartElementHandler = self._start
@@ -1225,7 +1267,7 @@ class XMLTreeBuilder:
         attrib = {}
         if attrib_in:
             for i in range(0, len(attrib_in), 2):
-                attrib[fixname(attrib_in[i])] = self._fixtext(attrib_in[i+1])
+                attrib[fixname(attrib_in[i])] = self._fixtext(attrib_in[i + 1])
         return self._target.start(tag, attrib)
 
     def _data(self, text):
@@ -1245,10 +1287,10 @@ class XMLTreeBuilder:
                 raise expat.error(
                     "undefined entity %s: line %d, column %d" %
                     (text, self._parser.ErrorLineNumber,
-                    self._parser.ErrorColumnNumber)
-                    )
+                     self._parser.ErrorColumnNumber)
+                )
         elif prefix == "<" and text[:9] == "<!DOCTYPE":
-            self._doctype = [] # inside a doctype declaration
+            self._doctype = []  # inside a doctype declaration
         elif self._doctype is not None:
             # parse doctype contents
             if prefix == ">":
@@ -1273,7 +1315,7 @@ class XMLTreeBuilder:
                 self.doctype(name, pubid, system[1:-1])
                 self._doctype = None
 
-    ##
+    #
     # Handles a doctype declaration.
     #
     # @param name Doctype name.
@@ -1283,7 +1325,7 @@ class XMLTreeBuilder:
     def doctype(self, name, pubid, system):
         pass
 
-    ##
+    #
     # Feeds data to the parser.
     #
     # @param data Encoded data.
@@ -1291,16 +1333,16 @@ class XMLTreeBuilder:
     def feed(self, data):
         self._parser.Parse(data, 0)
 
-    ##
+    #
     # Finishes feeding data to the parser.
     #
     # @return An element structure.
     # @defreturn Element
 
     def close(self):
-        self._parser.Parse("", 1) # end of data
+        self._parser.Parse("", 1)  # end of data
         tree = self._target.close()
-        del self._target, self._parser # get rid of circular references
+        del self._target, self._parser  # get rid of circular references
         return tree
 
 
@@ -1311,7 +1353,7 @@ if sys.platform == "cli":
     try:
         import ElementIron
     except ImportError:
-        pass # fall back on optional pyexpat emulation
+        pass  # fall back on optional pyexpat emulation
     else:
         parser_api = ElementIron.ParserAPI(TreeBuilder)
 

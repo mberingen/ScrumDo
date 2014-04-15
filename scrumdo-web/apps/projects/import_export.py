@@ -423,7 +423,7 @@ def _getFieldFromImportData(data, field_name):
     #        For instance, case insensitive, ignore whitespace, whatever.
 
     rv = data.get(field_name)
-    if(rv == None):
+    if(rv is None):
         # If we didn't find one, lets try an alternative naming...
         rv = data.get(_toXMLNodeName(field_name))
 
@@ -434,7 +434,7 @@ def _importSingleRow(row, iteration, user):
     try:
         local_id = _getFieldFromImportData(row, "Story ID")
         story = None
-        if local_id != None:
+        if local_id is not None:
             try:
                 story = Story.objects.get(
                     project=iteration.project, local_id=int(local_id))
@@ -455,7 +455,7 @@ def _importSingleRow(row, iteration, user):
         headers = _getHeaders(iteration.project)
         for header in headers:
             value = _getFieldFromImportData(row, header[1])
-            if value != None:
+            if value is not None:
                 try:
                     # This should be a method capable of setting the property
                     f = header[4]

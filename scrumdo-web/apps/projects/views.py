@@ -401,7 +401,7 @@ def create(request, form_class=ProjectForm, template_name="projects/create.html"
 
             project.save()
 
-            if organization != None:
+            if organization is not None:
                 # make sure the specified organization is in the list of admin
                 # orgs, if not silently ignore it.
                 if organization in admin_organizations:
@@ -585,7 +585,7 @@ def project_prediction(request, group_slug):
         velocity = int(requested_velocity)
     else:
         velocity = project.velocity
-    if velocity == 0 or velocity == None:
+    if velocity == 0 or velocity is None:
         # A default velocity just in case this project doesn't have one yet.
         velocity = 25
     requested_length = request.GET.get("iteration_length", "x")

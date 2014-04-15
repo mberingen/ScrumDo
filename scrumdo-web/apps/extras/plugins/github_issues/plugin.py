@@ -86,7 +86,7 @@ class Plugin( ScrumdoProjectExtra ):
     def storyCreated( self, project, story, **kwargs):
         """ Called when a new ScrumDo story is created. This plugin creates a GitHub issue if the upload option is enabled. """
 
-        if self._getExternalLink( story ) != None:
+        if self._getExternalLink( story ) is not None:
             # Already uploaded
             return
 
@@ -153,7 +153,7 @@ class Plugin( ScrumdoProjectExtra ):
 
         for issue in issues:
             story = self._getStory( issue.number, queue_stories, project_stories)
-            if story == None:
+            if story is None:
                 self._createStoryForIssue( issue, project , configuration.get('repository'))
             else:
                 if story.summary != issue.title or story.detail != issue.body :
@@ -201,7 +201,7 @@ class Plugin( ScrumdoProjectExtra ):
 
         link = self._getExternalLink( story )
 
-        if link == None:
+        if link is None:
             logging.debug("Story not associated with external story, aborting.")
             return
 
@@ -221,7 +221,7 @@ class Plugin( ScrumdoProjectExtra ):
 
         link = self._getExternalLink( story )
 
-        if link == None:
+        if link is None:
             logging.debug("Story not associated with external story, aborting.")
             return
         # Grab the github client passed in kwargs, if none, create one.
@@ -254,7 +254,7 @@ class Plugin( ScrumdoProjectExtra ):
     def _getStoriesInProjectAssociatedWithExtra(self, project):
         rv = []
         for story in project.stories.all():
-            if self._getExternalLink( story ) != None:
+            if self._getExternalLink( story ) is not None:
                 rv.append( story )
 
         return rv
@@ -262,7 +262,7 @@ class Plugin( ScrumdoProjectExtra ):
     def _getStory( self, external_id, queue_stories, project_stories ):
         """ Pass in an external id, list of stories in the queue, and a list of stories in the project, and will return the story if the it exists in either list. """
         story = self._getStoryFromQueue( external_id, queue_stories)
-        if story != None:
+        if story is not None:
             return story
         return self._getStoryFromProject( external_id, project_stories )
 

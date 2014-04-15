@@ -95,7 +95,7 @@ class diff_match_patch:
       Array of changes.
     """
     # Set a deadline by which time the diff must be complete.
-    if deadline == None:
+    if deadline is None:
       # Unlike in most languages, Python counts time in seconds.
       if self.Diff_Timeout <= 0:
         deadline = sys.maxint
@@ -103,7 +103,7 @@ class diff_match_patch:
         deadline = time.time() + self.Diff_Timeout
 
     # Check for null inputs.
-    if text1 == None or text2 == None:
+    if text1 is None or text2 is None:
       raise ValueError("Null inputs. (diff_main)")
 
     # Check for equality (speedup).
@@ -1227,7 +1227,7 @@ class diff_match_patch:
       Best match index or -1.
     """
     # Check for null inputs.
-    if text == None or pattern == None:
+    if text is None or pattern is None:
       raise ValueError("Null inputs. (match_main)")
 
     loc = max(0, min(loc, len(text)))

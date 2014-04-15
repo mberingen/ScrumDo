@@ -129,12 +129,12 @@ if m2cryptoLoaded:
                     if s.startswith("-----BEGIN RSA PRIVATE KEY-----"):
                         def f():pass
                         key.rsa = m2.rsa_read_key(bio, callback)
-                        if key.rsa == None:
+                        if key.rsa is None:
                             raise SyntaxError()
                         key._hasPrivateKey = True
                     elif s.startswith("-----BEGIN PUBLIC KEY-----"):
                         key.rsa = m2.rsa_read_pub_key(bio)
-                        if key.rsa == None:
+                        if key.rsa is None:
                             raise SyntaxError()
                         key._hasPrivateKey = False
                     else:

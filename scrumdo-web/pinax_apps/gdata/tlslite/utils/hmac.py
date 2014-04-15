@@ -32,7 +32,7 @@ class HMAC:
             import md5
             digestmod = md5
 
-        if key == None: #TREVNEW - for faster copying
+        if key is None: #TREVNEW - for faster copying
             return      #TREVNEW
 
         self.digestmod = digestmod

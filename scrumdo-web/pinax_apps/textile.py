@@ -307,7 +307,7 @@ class Textile(object):
         # Convert to desired output.
         if isinstance(text, str):
             text = unicode(text, encoding)
- 
+
         text = text.encode(output, 'xmlcharrefreplace')
 
         # Sanitize?
@@ -880,9 +880,9 @@ class Textile(object):
     def fLink(self, match):
         pre, atts, text, title, url, slash, post = match.groups()
 
-        if pre == None:
+        if pre is None:
             pre = ''
-            
+
         url = self.checkRefs(url)
 
         atts = self.pba(atts)
@@ -1005,7 +1005,7 @@ class Textile(object):
 
     def fCode(self, match):
         before, text, after = match.groups()
-        if after == None: after = ''
+        if after is None: after = ''
         # text needs to be escaped
         if not self.restricted:
             text = self.encode_html(text)
@@ -1013,14 +1013,14 @@ class Textile(object):
 
     def fPre(self, match):
         before, text, after = match.groups()
-        if after == None: after = ''
+        if after is None: after = ''
         # text needs to be escapedd
         if not self.restricted:
             text = self.encode_html(text)
         return ''.join([before, '<pre>', self.shelve(text), '</pre>', after])
 
     def doSpecial(self, text, start, end, method=None):
-        if method == None:
+        if method is None:
             method = self.fSpecial
         pattern = re.compile(r'(^|\s|[\[({>])%s(.*?)%s(\s|$|[\])}])?' % (re.escape(start), re.escape(end)), re.M|re.S)
         return pattern.sub(method, text)
@@ -1030,7 +1030,7 @@ class Textile(object):
         special blocks like notextile or code
         """
         before, text, after = match.groups()
-        if after == None: after = ''
+        if after is None: after = ''
         return ''.join([before, self.shelve(self.encode_html(text)), after])
 
     def noTextile(self, text):
@@ -1039,7 +1039,7 @@ class Textile(object):
 
     def fTextile(self, match):
         before, notextile, after = match.groups()
-        if after == None: after = ''
+        if after is None: after = ''
         return ''.join([before, self.shelve(notextile), after])
 
 

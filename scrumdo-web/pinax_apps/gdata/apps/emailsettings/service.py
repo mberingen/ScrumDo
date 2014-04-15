@@ -256,14 +256,14 @@ class EmailSettingsService(gdata.apps.service.PropertyService):
     """
     uri = self._serviceUrl('general', username)
     properties = {}
-    if page_size != None:
+    if page_size is not None:
       properties['pageSize'] = str(page_size)
-    if shortcuts != None:
+    if shortcuts is not None:
       properties['shortcuts'] = self._bool2str(shortcuts)
-    if arrows != None:
+    if arrows is not None:
       properties['arrows'] = self._bool2str(arrows)
-    if snippets != None:
+    if snippets is not None:
       properties['snippets'] = self._bool2str(snippets)
-    if unicode != None:
+    if unicode is not None:
       properties['unicode'] = self._bool2str(unicode)
     return self._PutProperties(uri, properties)

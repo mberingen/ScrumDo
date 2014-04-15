@@ -14,7 +14,7 @@ class CommentModerator(moderation.CommentModerator):
     def _is_past_max_depth(self, comment):
         i = 1
         c = comment.parent
-        while c != None:
+        while c is not None:
             c = c.parent
             i = i + 1
             if i > self.max_depth:
@@ -38,7 +38,7 @@ class Moderator(moderation.Moderator):
         for model in (ThreadedComment, FreeThreadedComment):
             signals.pre_save.connect(self.pre_save_moderation, sender=model)
             signals.post_save.connect(self.post_save_moderation, sender=model)
-    
+
     ## THE FOLLOWING ARE HACKS UNTIL django-comment-utils GETS UPDATED SIGNALS ####
     def pre_save_moderation(self, sender=None, instance=None, **kwargs):
         return super(Moderator, self).pre_save_moderation(sender, instance)
@@ -47,7 +47,7 @@ class Moderator(moderation.Moderator):
         return super(Moderator, self).post_save_moderation(sender, instance)
 
 
-# Instantiate the ``Moderator`` so that other modules can import and 
+# Instantiate the ``Moderator`` so that other modules can import and
 # begin to register with it.
 
 moderator = Moderator()

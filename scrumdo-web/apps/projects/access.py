@@ -43,7 +43,7 @@ def has_staff_access(organization, user):
         #     return True
         key = cache_key(organization, user, "staff")
         cached_value = cache.get(key)
-        if cached_value == None:
+        if cached_value is None:
             access = organization.teams.filter(access_type="staff",members = user).count() > 0
             cache.set(key, access, CACHE_PERMISSION_SECONDS)
             return access
@@ -59,7 +59,7 @@ def has_admin_access( project, user , ignore_active=False):
                 return False
         key = cache_key(project, user, "admin")
         cached_value = cache.get(key)
-        if cached_value == None:
+        if cached_value is None:
             access = real_has_admin_access(project,user)
             cache.set(key, access, CACHE_PERMISSION_SECONDS)
             return access
@@ -71,11 +71,11 @@ def has_admin_access( project, user , ignore_active=False):
 def real_has_admin_access(project, user):
     if user.is_staff:
         return True
-    if project.creator == user: 
+    if project.creator == user:
         return True
     if has_staff_access(project.organization, user):
-        return True    
-    return Organization.objects.filter( teams__members = user , teams__access_type="admin", teams__projects=project).count() > 0            
+        return True
+    return Organization.objects.filter( teams__members = user , teams__access_type="admin", teams__projects=project).count() > 0
 
 def has_write_access( project, user ):
     try:
@@ -83,7 +83,7 @@ def has_write_access( project, user ):
             return False
         key = cache_key(project, user, "write")
         cached_value = cache.get(key)
-        if cached_value == None:
+        if cached_value is None:
             access = real_has_write_access(project,user)
             cache.set(key, access, CACHE_PERMISSION_SECONDS)
             return access
@@ -112,7 +112,7 @@ def has_read_access( project, user ):
 
         key = cache_key(project, user, "read")
         cached_value = cache.get(key)
-        if cached_value == None:
+        if cached_value is None:
             access = real_has_read_access(project,user)
             cache.set(key, access, CACHE_PERMISSION_SECONDS)
             return access
