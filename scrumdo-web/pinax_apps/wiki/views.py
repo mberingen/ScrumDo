@@ -15,6 +15,7 @@ from django.views.generic.simple import redirect_to
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.syndication.feeds import FeedDoesNotExist
+from django.contrib import messages
 
 from wiki.forms import ArticleForm, SearchForm
 from wiki.models import Article, ChangeSet
