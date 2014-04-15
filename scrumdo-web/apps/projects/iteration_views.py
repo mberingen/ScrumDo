@@ -202,7 +202,7 @@ def iteration_import(request, group_slug, iteration_id):
     if request.method == "POST":
         form = form_class(request.POST)
         import_file = request.FILES.get("import_file", None)
-        if form.is_valid() and import_file != None:
+        if form.is_valid() and import_file is not None:
             unlock = form.cleaned_data.get("unlock_iteration", False)
             if unlock:
                 iteration.locked = False
