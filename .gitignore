@@ -29,3 +29,4 @@ nosetests.xml
 .env
 
 fabfile.py
+uwsgi.ini
