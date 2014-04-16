@@ -31,3 +31,14 @@ nosetests.xml
 fabfile.py
 uwsgi.ini
 /static/
+
+cron-scripts/record_backlog.sh
+cron-scripts/site_stats.sh
+cron-scripts/send_email.sh
+cron-scripts/resend_email.sh
+cron-scripts/extras_sync.sh
+cron-scripts/extras_pull.sh
+
+cron-scripts/daily_digest.sh
+cron-scripts/cleanact.sh
+cron-scripts/rebuild_index.sh
