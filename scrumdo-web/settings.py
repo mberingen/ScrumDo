@@ -32,8 +32,14 @@ import logging
 PINAX_ROOT = os.path.abspath(os.path.dirname(pinax.__file__))
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
+scrumdo_apps = os.path.join(PROJECT_ROOT, 'apps')
+sys.path.append(scrumdo_apps)
+
 pinax_apps = os.path.join(PROJECT_ROOT, 'pinax_apps')
 sys.path.append(pinax_apps)
+
+pinax_extra_apps = os.path.join(pinax_apps, 'pinax', 'apps')
+sys.path.append(pinax_extra_apps)
 
 # tells Pinax to use the default theme
 PINAX_THEME = 'default'
@@ -218,13 +224,6 @@ INSTALLED_APPS = (
     'scrum_log',
 )
 
-if DEBUG:
-    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
-    INSTALLED_APPS += ('debug_toolbar',)
-    DEBUG_TOOLBAR_CONFIG = {
-        'INTERCEPT_REDIRECTS': False,
-    }
-
 HAYSTACK_SITECONF = "search_sites"
 HAYSTACK_SEARCH_ENGINE = "solr"
 HAYSTACK_SOLR_URL = 'http://localhost:8983/solr'
@@ -292,3 +291,11 @@ try:
     from local_settings import *
 except ImportError as e:
     print "Could not import local_settings %s" % e
+
+
+if DEBUG:
+    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+    INSTALLED_APPS += ('debug_toolbar',)
+    DEBUG_TOOLBAR_CONFIG = {
+        'INTERCEPT_REDIRECTS': False,
+    }
